@@ -22,4 +22,16 @@ addEventListener('load', () => {
   }
 
   requestAnimationFrame(main);
+
+  addEventListener('resize', () => {
+    resizeCanvas();
+  });
+
+  resizeCanvas();
+
+  function resizeCanvas() {
+    const {width, height} = canvas.getBoundingClientRect();
+    level.width = canvas.width = width;
+    level.height = canvas.height = height;
+  }
 });
