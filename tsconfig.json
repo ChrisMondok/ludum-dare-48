@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "target": "ESNEXT",
+    "allowJs": true,
     "module": "ESNext",
     "outDir": "./dist",
     "lib": ["dom", "es2017"],
@@ -14,10 +15,13 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "emitDecoratorMetadata": true,
+    "paths": {
+      "@lib": ["./node_modules"]
+    }
   },
   "rootDir": "./",
   "include": [
-    "src/main.ts"
+    "main.ts"
   ]
 }

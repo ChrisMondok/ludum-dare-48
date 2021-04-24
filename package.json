@@ -13,6 +13,7 @@
   "homepage": "https://github.com/ChrisMondok/ludum-dare-48#readme",
   "description": "",
   "dependencies": {
+    "simplex-noise": "^2.4.0",
     "typescript": "^4.2.4"
   }
 }
