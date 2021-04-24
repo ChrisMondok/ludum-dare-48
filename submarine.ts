@@ -1,16 +1,16 @@
 import type {Game} from './game';
-import {distanceSquared} from './math.js';
+import {Vector} from './math.js';
 import {INPUT} from './input.js';
 
 export class Submarine {
   headlightAngle = 0;
 
-  private velocity = {x: 0, y: 0};
+  velocity = {x: 0, y: 0};
   private buoyancy = 0;
 
   private readonly ballastFillRate = 2;
   private readonly horizontalAcceleration = 100;
-  private readonly verticalAcceleration = 50;
+  private readonly verticalAcceleration = 66;
   private readonly drag = 0.5;
   
   constructor(readonly level: Game, public x: number, public y: number) {}
@@ -20,12 +20,12 @@ export class Submarine {
     this.buoyancy = Math.max(-1, Math.min(1, this.buoyancy));
     switch(INPUT.aimMode) {
       case 'joystick':
-        if(distanceSquared(INPUT.rightAxis) > 0.1) {
+        if(Vector.distanceSquared(INPUT.rightAxis) > 0.1) {
           this.headlightAngle = Math.atan2(INPUT.rightAxis.y, INPUT.rightAxis.x);
         }
         break;
       case 'mouse':
-        this.headlightAngle = Math.atan2(INPUT.mouse.y - this.level.offset.y - this.y, INPUT.mouse.x - this.level.offset.x - this.x);
+        this.headlightAngle = Math.atan2(INPUT.mouse.y + this.level.offset.y - this.y, INPUT.mouse.x + this.level.offset.x - this.x);
         break;
     }
 
@@ -51,10 +51,9 @@ export class Submarine {
     ctx.lineTo(this.x, this.y);
     ctx.fill();
 
-    ctx.strokeStyle = 'lime';
     ctx.beginPath();
-    ctx.moveTo(this.x, this.y);
-    ctx.stroke();
+    ctx.arc(this.x, this.y, 64, 0, 2 * Math.PI, false);
+    ctx.fill();
   }
 
   drawHud(ctx: CanvasRenderingContext2D) {

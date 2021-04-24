@@ -1,4 +1,4 @@
-import {distanceSquared} from './math.js';
+import {Vector} from './math.js';
 
 export let INPUT: Input;
 
@@ -82,7 +82,7 @@ export class Input {
       this.rightTrigger = (firstGamepad.axes[5] - this.rightTriggerMin) / (1 - this.rightTriggerMin);
     }
 
-    if(this.aimMode !== 'joystick' && distanceSquared(oldRight, this.rightAxis) > 0.1) {
+    if(this.aimMode !== 'joystick' && Vector.distanceSquared(oldRight, this.rightAxis) > 0.1) {
       this.aimMode = 'joystick';
     }
   }
