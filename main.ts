@@ -1,4 +1,6 @@
 declare var SimplexNoise: typeof import('./node_modules/simplex-noise/simplex-noise.js');
+
+import {Input} from './input.js';
 import {Submarine} from './submarine.js';
 
 const NOISE = new SimplexNoise('floor');
@@ -6,13 +8,15 @@ const NOISE = new SimplexNoise('floor');
 addEventListener('load', () => {
   const canvas = document.querySelector('canvas')!;
 
-  const level = new Level(canvas);
-
+  const input = new Input();
+  const level = new Game(input, canvas);
 
   let previousTime = 0;
   function main(time: number) {
     if(previousTime) {
-      level.tick((time - previousTime) / 1000);
+      const dt = (time - previousTime) / 1000;
+      input.tick();
+      level.tick(dt);
       level.draw();
     }
     previousTime = time;
@@ -28,26 +32,21 @@ interface CaveGeometry {
   floor: number[];
 }
 
-export class Level {
+export class Game {
   readonly cave: CaveGeometry = {ceiling: [], floor: []};
   readonly ctx = this.canvas.getContext('2d')!;
   readonly offset = {x: 0, y: 0};
-  readonly mouse = {x: 0, y: 0};
 
   readonly submarine: Submarine;
 
-  constructor(readonly canvas: HTMLCanvasElement) {
+  constructor(readonly input: Input, readonly canvas: HTMLCanvasElement) {
     this.submarine = new Submarine(this, 300, 300);
-
-    canvas.addEventListener('mousemove', evt => {
-      this.mouse.x = evt.clientX;
-      this.mouse.y = evt.clientY;
-    });
+    (window as any).ctx = this.ctx;
   }
 
   tick(dt: number) {
+    this.getCaveGeometry(this.cave, 0, this.canvas.width);
     this.submarine.tick(dt);
-    this.updateCaveGeometry(0, this.canvas.width);
   }
 
   draw() {
@@ -55,6 +54,7 @@ export class Level {
     this.ctx.clearRect(0, 0, width, height);
     this.submarine.draw(this.ctx);
     this.drawCaveWalls();
+    this.submarine.drawHud(this.ctx);
   }
 
   trace(out: {x: number, y: number}, origin: {x: number, y: number}, destination: {x: number, y: number}) {
@@ -93,12 +93,11 @@ export class Level {
     this.ctx.fill();
   }
 
-  private updateCaveGeometry(xStart: number, xEnd: number): void {
+  private getCaveGeometry(out: CaveGeometry, xStart: number, xEnd: number): void {
     for(let i = 0; i < xEnd - xStart; i++) {
       const x = i + xStart;
-      this.cave.ceiling[i] = 100 * NOISE.noise2D(x / 100, 0) + 100;
-      this.cave.floor[i] = this.cave.ceiling[i] + 300 + 100  * NOISE.noise2D(x / 100, 1);
-      NOISE.grad3
+      out.ceiling[i] = 100 * NOISE.noise2D(x / 100, 0) + 100;
+      out.floor[i] = this.cave.ceiling[i] + 300 + 100  * NOISE.noise2D(x / 100, 1);
     }
   }
 
