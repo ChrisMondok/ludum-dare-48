@@ -44,11 +44,23 @@ export class Game {
   }
 
   private drawHud() {
+    this.ctx.font = '12px sans';
+    this.ctx.textAlign = 'center';
+    this.ctx.textBaseline = 'middle';
     const offset = PX_PER_FATHOM * Math.floor(this.offset.y / PX_PER_FATHOM);
     for(let i = 0; i < this.height + PX_PER_FATHOM; i += PX_PER_FATHOM) {
       const y = i + offset;
       if(y <= 0) continue;
       this.ctx.fillText((y / PX_PER_FATHOM).toString(), 10, y - this.offset.y);
+    }
+    if(this.submarine.air < 0) {
+      const fadeAmount = Math.min(1, this.submarine.air / -5000);
+      const blackness = `rgba(0, 0, 0, ${fadeAmount}`;
+      this.ctx.fillStyle = blackness;
+      this.ctx.fillRect(0, 0, this.width, this.height);
+      this.ctx.fillStyle = `rgba(255, 255, 255, ${fadeAmount})`;
+      this.ctx.font = '48px sans';
+      this.ctx.fillText('Game Over', this.width / 2, this.height / 2);
     }
   }
 

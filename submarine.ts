@@ -23,28 +23,32 @@ export class Submarine {
   constructor(readonly level: Game, public x: number, public y: number) {}
 
   tick(dt: number) {
-    this.buoyancy += this.ballastFillRate * INPUT.up * dt;
-    this.buoyancy = Math.max(-1, Math.min(1, this.buoyancy));
-    switch(INPUT.aimMode) {
-      case 'joystick':
-        if(Vector.distanceSquared(INPUT.rightAxis) > 0.1) {
-          this.headlightAngle = Math.atan2(INPUT.rightAxis.y, INPUT.rightAxis.x);
-        }
-        break;
-      case 'mouse':
-        this.headlightAngle = Math.atan2(INPUT.mouse.y + this.level.offset.y - this.y, INPUT.mouse.x + this.level.offset.x - this.x);
-        break;
+    if(this.air > 0) {
+      this.velocity.x += this.horizontalAcceleration * INPUT.right * dt;
+      this.buoyancy += this.ballastFillRate * INPUT.up * dt;
+
+      switch(INPUT.aimMode) {
+        case 'joystick':
+          if(Vector.distanceSquared(INPUT.rightAxis) > 0.1) {
+            this.headlightAngle = Math.atan2(INPUT.rightAxis.y, INPUT.rightAxis.x);
+          }
+          break;
+        case 'mouse':
+          this.headlightAngle = Math.atan2(INPUT.mouse.y + this.level.offset.y - this.y, INPUT.mouse.x + this.level.offset.x - this.x);
+          break;
+      }
+      if(INPUT.up > 0) this.air -= dt * 1000 * this.ballastAirUsageRate;
     }
+
+    this.buoyancy = Math.max(-1, Math.min(1, this.buoyancy));
 
     this.x += this.velocity.x * dt;
     this.y += this.velocity.y * dt;
 
-    this.velocity.x += this.horizontalAcceleration * INPUT.right * dt;
     this.velocity.y -= this.buoyancy * this.verticalAcceleration * dt;
     this.velocity.x -= this.velocity.x * this.drag * dt;
     this.velocity.y -= this.velocity.y * this.drag * dt;
     this.air -= dt * 1000;
-    if(INPUT.up > 0) this.air -= dt * 1000 * this.ballastAirUsageRate;
   }
 
   draw(ctx: CanvasRenderingContext2D) {
@@ -100,8 +104,9 @@ export class Submarine {
 
     ctx.fillStyle = INPUT.up > 0 ? '#F88' : 'white';
     ctx.beginPath();
-    ctx.arc(this.x, this.y, 32, Math.PI * -0.25 * (this.air / this.maxAir), Math.PI * 0.25 * (this.air / this.maxAir), false);
-    ctx.arc(this.x, this.y, 42, Math.PI * 0.25 * (this.air / this.maxAir), Math.PI * -0.25 * (this.air / this.maxAir), true);
+    const airAmount = Math.max(this.air, 0) / this.maxAir;
+    ctx.arc(this.x, this.y, 32, Math.PI * -0.25 * airAmount, Math.PI * 0.25 * airAmount, false);
+    ctx.arc(this.x, this.y, 42, Math.PI * 0.25 * airAmount, Math.PI * -0.25 * airAmount, true);
     ctx.closePath();
     ctx.fill();
   }
