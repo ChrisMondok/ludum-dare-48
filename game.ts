@@ -45,14 +45,21 @@ export class Game {
 
   private drawHud() {
     this.ctx.font = '12px sans';
-    this.ctx.textAlign = 'center';
-    this.ctx.textBaseline = 'middle';
+    this.ctx.textAlign = 'left';
+    this.ctx.textBaseline = 'top';
+    this.ctx.fillStyle = 'white';
     const offset = PX_PER_FATHOM * Math.floor(this.offset.y / PX_PER_FATHOM);
     for(let i = 0; i < this.height + PX_PER_FATHOM; i += PX_PER_FATHOM) {
       const y = i + offset;
-      if(y <= 0) continue;
+      if(y < 0) continue;
       this.ctx.fillText((y / PX_PER_FATHOM).toString(), 10, y - this.offset.y);
     }
+
+    this.ctx.fillText('fathoms', 10 + this.ctx.measureText('00 ').width, 10 - Math.min(this.offset.y + 10, 0));
+
+    this.ctx.textAlign = 'right';
+    this.ctx.fillText(this.getRemainingAirTime(), this.width - 24, 24);
+
     if(this.submarine.air < 0) {
       const fadeAmount = Math.min(1, this.submarine.air / -5000);
       const blackness = `rgba(0, 0, 0, ${fadeAmount}`;
@@ -62,6 +69,12 @@ export class Game {
       this.ctx.font = '48px sans';
       this.ctx.fillText('Game Over', this.width / 2, this.height / 2);
     }
+  }
+
+  private getRemainingAirTime() {
+    const seconds = Math.floor(this.submarine.air / 1000) % 60;
+    const minutes = Math.floor(this.submarine.air / 60_000);
+    return `${minutes.toString()}:${seconds.toString().padStart(2, '0')} air remaining`;
   }
 
   trace(out: {x: number, y: number}, origin: {x: number, y: number}, destination: {x: number, y: number}) {
