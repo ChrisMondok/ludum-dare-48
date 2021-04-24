@@ -6,9 +6,14 @@ export class Submarine {
   headlightAngle = 0;
 
   velocity = {x: 0, y: 0};
+
+  air = 60 * 5 * 1000; //five minutes of air
+  readonly maxAir = this.air;
+
   private buoyancy = 0;
   private spotlightGradient: CanvasGradient|undefined;
   private glowGradient: CanvasGradient|undefined;
+  private ballastAirUsageRate = 10;
 
   private readonly ballastFillRate = 2;
   private readonly horizontalAcceleration = 100;
@@ -38,6 +43,8 @@ export class Submarine {
     this.velocity.y -= this.buoyancy * this.verticalAcceleration * dt;
     this.velocity.x -= this.velocity.x * this.drag * dt;
     this.velocity.y -= this.velocity.y * this.drag * dt;
+    this.air -= dt * 1000;
+    if(INPUT.up > 0) this.air -= dt * 1000 * this.ballastAirUsageRate;
   }
 
   draw(ctx: CanvasRenderingContext2D) {
@@ -61,18 +68,42 @@ export class Submarine {
     ctx.beginPath();
     ctx.arc(0, 0, 128, 0, 2 * Math.PI, false);
     ctx.fill();
+
     ctx.restore();
   }
 
   drawHud(ctx: CanvasRenderingContext2D) {
+    ctx.fillStyle = 'white';
     ctx.strokeStyle = 'white';
     ctx.lineWidth = 1;
 
     //buoyancy meter
-    const bmLeftEdge = this.velocity.x < 0 ? this.x + 30.5 : this.x - 40.5;
-    ctx.strokeRect(bmLeftEdge, this.y - 32, 10, 64);
-    ctx.fillStyle = 'white';
-    ctx.fillRect(bmLeftEdge, this.y + 0, 10, - 32 * this.buoyancy);
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, 32, Math.PI * 0.75, Math.PI * 1.25, false);
+    ctx.arc(this.x, this.y, 42, Math.PI * 1.25, Math.PI * 0.75, true);
+    ctx.closePath();
+    ctx.stroke();
+
+    ctx.beginPath();
+    const end = this.buoyancy * 0.25 * Math.PI;
+    ctx.arc(this.x, this.y, 32, Math.PI, Math.PI + end, this.buoyancy < 0);
+    ctx.arc(this.x, this.y, 42, Math.PI + end, Math.PI, this.buoyancy > 0);
+    ctx.closePath();
+    ctx.fill();
+
+    //air meter
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, 32, Math.PI * -0.25, Math.PI * 0.25, false);
+    ctx.arc(this.x, this.y, 42, Math.PI * 0.25, Math.PI * -0.25, true);
+    ctx.closePath();
+    ctx.stroke();
+
+    ctx.fillStyle = INPUT.up > 0 ? '#F88' : 'white';
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, 32, Math.PI * -0.25 * (this.air / this.maxAir), Math.PI * 0.25 * (this.air / this.maxAir), false);
+    ctx.arc(this.x, this.y, 42, Math.PI * 0.25 * (this.air / this.maxAir), Math.PI * -0.25 * (this.air / this.maxAir), true);
+    ctx.closePath();
+    ctx.fill();
   }
 
   private createSpotlightGradient(ctx: CanvasRenderingContext2D) {
