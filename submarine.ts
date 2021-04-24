@@ -1,4 +1,4 @@
-import type {Game} from './main';
+import type {Game} from './game';
 import {distanceSquared} from './math.js';
 import {INPUT} from './input.js';
 
@@ -13,9 +13,7 @@ export class Submarine {
   private readonly verticalAcceleration = 50;
   private readonly drag = 0.5;
   
-  constructor(readonly level: Game, public x: number, public y: number) {
-
-  }
+  constructor(readonly level: Game, public x: number, public y: number) {}
 
   tick(dt: number) {
     this.buoyancy += this.ballastFillRate * INPUT.up * dt;
