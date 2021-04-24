@@ -83,6 +83,7 @@ export class Game {
   private drawCaveWalls() {
     this.ctx.save();
     this.ctx.resetTransform();
+    this.ctx.beginPath();
     this.ctx.rect(0, Math.max(0, -this.offset.y), this.width, this.height);
     this.ctx.clip();
     this.ctx.translate(0, -this.offset.y);

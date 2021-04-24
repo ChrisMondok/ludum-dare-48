@@ -7,6 +7,8 @@ export class Submarine {
 
   velocity = {x: 0, y: 0};
   private buoyancy = 0;
+  private spotlightGradient: CanvasGradient|undefined;
+  private glowGradient: CanvasGradient|undefined;
 
   private readonly ballastFillRate = 2;
   private readonly horizontalAcceleration = 100;
@@ -39,21 +41,27 @@ export class Submarine {
   }
 
   draw(ctx: CanvasRenderingContext2D) {
-    ctx.fillStyle = 'white';
+    this.spotlightGradient = this.spotlightGradient ?? this.createSpotlightGradient(ctx);
+    this.glowGradient = this.glowGradient ?? this.createGlowGradient(ctx);
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.fillStyle = 'silver';
     ctx.beginPath();
-    ctx.arc(this.x, this.y, 12, 0, 2 * Math.PI, false);
+    ctx.arc(0, 0, 12, 0, 2 * Math.PI, false);
     ctx.fill();
 
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.fillStyle = this.spotlightGradient;
     ctx.beginPath();
-    ctx.moveTo(this.x, this.y);
-    ctx.arc(this.x, this.y, 500, this.headlightAngle - 0.2, this.headlightAngle + 0.2, false);
-    ctx.lineTo(this.x, this.y);
+    ctx.moveTo(0, 0);
+    ctx.arc(0, 0, 500, this.headlightAngle - 0.2, this.headlightAngle + 0.2, false);
+    ctx.lineTo(0, 0);
     ctx.fill();
 
+    ctx.fillStyle = this.glowGradient;
     ctx.beginPath();
-    ctx.arc(this.x, this.y, 64, 0, 2 * Math.PI, false);
+    ctx.arc(0, 0, 128, 0, 2 * Math.PI, false);
     ctx.fill();
+    ctx.restore();
   }
 
   drawHud(ctx: CanvasRenderingContext2D) {
@@ -65,5 +73,19 @@ export class Submarine {
     ctx.strokeRect(bmLeftEdge, this.y - 32, 10, 64);
     ctx.fillStyle = 'white';
     ctx.fillRect(bmLeftEdge, this.y + 0, 10, - 32 * this.buoyancy);
+  }
+
+  private createSpotlightGradient(ctx: CanvasRenderingContext2D) {
+    const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, 500);
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
+    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    return gradient;
+  }
+
+  private createGlowGradient(ctx: CanvasRenderingContext2D) {
+    const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, 128);
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
+    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    return gradient;
   }
 }
