@@ -68,7 +68,7 @@ export class Game {
     this.ctx.fillText(contemplationMessage, this.width - 24, y);
     if(this.submarine.isContemplating) {
       y += 12 + this.ctx.measureText(contemplationMessage).actualBoundingBoxDescent;
-      const cps = Math.floor(this.submarine.getContemplationRate() * 100) / 100;
+      const cps = Math.floor(this.getContemplationRate(this.submarine.y) * 100) / 100;
       this.ctx.fillText( `+ ${cps}/s`, this.width - 24, y);
     }
 
@@ -114,12 +114,12 @@ export class Game {
       const difficulty = this.getDifficulty(x);
 
       const depth = x / 3;
-      const height = 80 + 500 * (1-difficulty);
+      const height = 100 + 500 * (1-difficulty);
 
-      const centerJagginess = 100 * difficulty;
+      const centerJagginess = height / 4 * difficulty;
       const wallJagginess = Math.min(10, height * difficulty);
 
-      const wavelength = 50 + difficulty * 50;
+      const wavelength = 100 - difficulty * 25;
       out.center[i] = depth + centerJagginess * this.noise.noise2D(x / wavelength, depth / wavelength);
       out.ceiling[i] = out.center[i] - (height / 2);
       out.ceiling[i] += wallJagginess * this.noise.noise2D(x / wavelength, out.ceiling[i] / wavelength);
@@ -173,6 +173,12 @@ export class Game {
     for(let x = 0; x < this.width; x++) this.ctx.lineTo(x, this.cave.center[x] - this.offset.y);
     this.ctx.stroke();
 
+    this.ctx.strokeStyle = 'blue';
+    this.ctx.beginPath();
+    this.ctx.strokeRect(0.5, 0.5, 99, this.height - 1);
+    for(let y = 0; y < this.height; y++) this.ctx.lineTo(0.5 + 100 * this.getContemplationRate(y + this.offset.y), y);
+    this.ctx.stroke();
+
     this.ctx.strokeStyle = 'red';
     this.ctx.strokeRect(0.5, this.height - 100.5, this.width - 1, 99);
     this.ctx.beginPath();
@@ -183,8 +189,25 @@ export class Game {
     this.ctx.stroke();
   }
 
+  getContemplationRate(y: number) {
+    return Math.pow(y / 3000, 3);
+  }
+
+  endGame(score: number) {
+    document.getElementById('score')!.textContent = Math.floor(score).toString();
+    setGameState('game-over');
+
+    try {
+      const highScore = Math.max(score, Number((localStorage.getItem('high-score') ?? '0')));
+      localStorage.setItem('high-score', highScore.toString());
+      document.getElementById('high-score')!.textContent = Math.floor(highScore).toString();
+    } catch (e) {
+      alert(`Failed to use local storage, high score will not be saved`);
+    }
+  }
+
   private getDifficulty(x: number) {
-    let scaled = x / 5000;
+    let scaled = x / 3000;
     if(scaled < 1) return Math.pow(scaled, 2) / 3;
     scaled /= 2;
     const secondPart = 1 - 1/scaled + 2;

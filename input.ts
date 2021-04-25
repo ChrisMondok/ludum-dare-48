@@ -38,7 +38,10 @@ export class Input {
       this.mouse.y = evt.clientY;
     });
 
-    addEventListener('keydown', evt => this.heldKeys.add(evt.key));
+    addEventListener('keydown', evt => {
+      this.heldKeys.add(evt.key);
+      if(evt.key === '`') (window as any).debug = !(window as any).debug;
+    });
     addEventListener('keyup', evt => this.heldKeys.delete(evt.key));
     addEventListener('blur', () => this.heldKeys.clear());
   }

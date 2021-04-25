@@ -1,12 +1,11 @@
 import type {Game, CaveGeometry} from './game';
-import {setGameState} from './main.js';
 import {Vector, PX_PER_FATHOM} from './math.js';
 import {INPUT} from './input.js';
 import {Image} from './images.js';
 import {airEscapeGain, ambienceBiquad, ambienceGain} from './audio.js';
 
 export class Submarine {
-  air = 60 * 5 * 1000; //five minutes of air
+  air = 60 * 8 * 1000;
   contemplation = 0;
   isContemplating = false;
 
@@ -45,7 +44,7 @@ export class Submarine {
 
   private showQuitWarning = 0;
   
-  constructor(readonly level: Game, public x: number, public y: number) {
+  constructor(readonly game: Game, public x: number, public y: number) {
     document.getElementById('score')!.textContent = Math.floor(this.contemplation).toString();
   }
 
@@ -53,7 +52,7 @@ export class Submarine {
     if(this.air > 0) {
       this.handleInput(dt);
 
-      if(this.isContemplating) this.contemplation += dt * this.getContemplationRate();
+      if(this.isContemplating) this.contemplation += dt * this.game.getContemplationRate(this.y);
     }
 
     this.buoyancy = Math.max(-1, Math.min(1, this.buoyancy));
@@ -142,6 +141,13 @@ export class Submarine {
     ctx.closePath();
     ctx.fill();
 
+    if(this.showQuitWarning > 0) {
+      ctx.fillStyle = '#FAA';
+      ctx.textBaseline = 'top';
+      ctx.textAlign = 'center';
+      ctx.fillText('you must be at the surface to exit', this.x, this.y + 50);
+    }
+
     if((window as any).debug) {
       ctx.strokeStyle = 'red';
       ctx.beginPath();
@@ -149,17 +155,6 @@ export class Submarine {
       ctx.lineTo(this.penetration.x + this.x, this.penetration.y + this.y);
       ctx.stroke();
     }
-
-    if(this.showQuitWarning > 0) {
-      ctx.fillStyle = '#FAA';
-      ctx.textBaseline = 'top';
-      ctx.textAlign = 'center';
-      ctx.fillText('you must be at the surface to exit', this.x, this.y + 50);
-    }
-  }
-
-  getContemplationRate() {
-    return Math.pow(this.y / 2000, 2);
   }
 
   private doCollision(dt: number) {
@@ -167,7 +162,7 @@ export class Submarine {
 
     Vector.copy(this.penetration, Vector.ZERO);
     const startX = Math.floor(this.x - this.width / 2);
-    this.level.getCaveGeometry(this.caveGeometry, startX, startX + this.width);
+    this.game.getCaveGeometry(this.caveGeometry, startX, startX + this.width);
     if(this.caveGeometry.floor.length !== this.width) throw new Error('oh no');
 
     let floorPenetration = 0
@@ -224,7 +219,7 @@ export class Submarine {
           }
           break;
         case 'mouse':
-          this.headlightAngle = Math.atan2(INPUT.mouse.y + this.level.offset.y - this.y, INPUT.mouse.x + this.level.offset.x - this.x);
+          this.headlightAngle = Math.atan2(INPUT.mouse.y + this.game.offset.y - this.y, INPUT.mouse.x + this.game.offset.x - this.x);
           break;
       }
     }
@@ -235,8 +230,7 @@ export class Submarine {
       this.showQuitWarning = 3;
       return;
     }
-    document.getElementById('score')!.textContent = Math.floor(this.contemplation).toString();
-    setGameState('game-over');
+    this.game.endGame(this.contemplation);
   }
 
   private createSpotlightGradient(ctx: CanvasRenderingContext2D) {
