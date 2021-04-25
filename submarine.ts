@@ -101,7 +101,7 @@ export class Submarine {
     this.showQuitWarning = Math.max(0, this.showQuitWarning - dt);
     this.crashSoundCooldown = Math.max(0, this.crashSoundCooldown - dt);
     this.contemplationSoundCooldown = Math.max(0, this.contemplationSoundCooldown - dt);
-    if(!this.isContemplating) this.contemplation = Math.max(this.contemplationSoundCooldown, 1);
+    if(!this.isContemplating) this.contemplationSoundCooldown = Math.max(this.contemplationSoundCooldown, 1);
   }
 
   draw(ctx: CanvasRenderingContext2D) {
