@@ -128,3 +128,27 @@ joystick-button, joystick-direction {
 joystick-trigger {
   border-radius: 0 0 25% 25%;
 }
+
+button {
+  color: inherit;
+  font-size: inherit;
+  border: 2px solid white;
+  background-color: black;
+  border-radius: 4px;
+}
+
+@keyframes focused {
+  from {
+    box-shadow: 0px 0px 8px 4px white;
+  }
+
+  to {
+    box-shadow: 0px 0px 8px 4px lime;
+  }
+}
+
+button:focus {
+  outline: none;
+  animation: 1s ease-out infinite focused;
+}
+

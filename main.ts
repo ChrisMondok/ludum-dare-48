@@ -7,18 +7,24 @@ import {doneLoadingImages} from './images.js';
 
 let game: Game|undefined;
 
+let currentMenu: HTMLDivElement|null = null;
+
 addEventListener('load', () => {
   const canvas = document.querySelector('canvas')!;
   const input = new Input();
 
   let previousTime = 0;
   function main(time: number) {
-    if(previousTime && currentState === 'playing') {
+    if(previousTime) {
       const dt = Math.min(0.12, (time - previousTime) / 1000);
       input.tick();
-      if(game) {
+      if(game && currentState === 'playing') {
         game.tick(dt);
         game.draw();
+      }
+
+      if(currentMenu && Math.abs(input.vScroll) > 0.1) {
+        currentMenu.scrollTop += Math.floor(input.vScroll * dt * 1000);
       }
     }
     previousTime = time;
@@ -34,6 +40,7 @@ addEventListener('load', () => {
   });
 
   addEventListener('blur', () => setGameState('paused'));
+  addEventListener('focus', () => currentMenu?.querySelector('button')?.focus());
 
   document.querySelectorAll<HTMLButtonElement>('[data-set-state]').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -75,7 +82,8 @@ addEventListener('load', () => {
       game = undefined;
     }
 
-    document.querySelector<HTMLButtonElement>(`#${state} button`)?.focus();
+    currentMenu = document.querySelector<HTMLDivElement>(`#${state}`);
+    currentMenu?.querySelector('button')?.focus();
 
     masterGain.gain.value = state === 'playing' ? 1 : 0;
 
@@ -84,7 +92,11 @@ addEventListener('load', () => {
 
   setGameState('main-menu');
 
-  doneLoadingImages().then(() => (document.getElementById('start-button') as HTMLButtonElement).disabled = false);
+  doneLoadingImages().then(() => {
+    const startButton = (document.getElementById('start-button') as HTMLButtonElement);
+    startButton.disabled = false;
+    startButton.focus();
+  });
 });
 
 type GameState = 'main-menu'|'paused'|'playing'|'how-to-play'|'game-over';

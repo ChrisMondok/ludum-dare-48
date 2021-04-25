@@ -1,4 +1,5 @@
 import {Vector} from './math.js';
+import {setGameState} from './main.js';
 
 export let INPUT: Input;
 
@@ -10,6 +11,7 @@ const RIGHT_KEYS = Object.freeze(['d', 'ArrowRight']);
 export class Input {
   up = 0;
   right = 0;
+  vScroll = 0;
   contemplate = false;
   quit = false;
   readonly mouse = {x: 0, y: 0};
@@ -45,6 +47,7 @@ export class Input {
     this.updateGamepads();
     this.up = this.rightTrigger - this.leftTrigger + this.readKeyboardAxis(DOWN_KEYS, UP_KEYS);
     this.right = this.leftAxis.x + this.readKeyboardAxis(LEFT_KEYS, RIGHT_KEYS);
+    this.vScroll = this.leftAxis.y;
     this.contemplate = this.heldContemplateJsButton || this.heldKeys.has('e') || this.heldKeys.has('c');
     this.quit = this.heldQuitJsButton || this.heldKeys.has('q');
   }
@@ -65,9 +68,11 @@ export class Input {
       return;
     }
 
+    const oldHeldContemplate = this.heldContemplateJsButton;
     this.heldContemplateJsButton = firstGamepad.buttons[0].pressed;
     this.heldQuitJsButton = firstGamepad.buttons[1].pressed;
 
+    const oldLeft = {x: this.leftAxis.x, y: this.leftAxis.y};
     const oldRight = {x: this.rightAxis.y, y: this.rightAxis.y};
 
     // everyone agrees that the left stick is 0 and 1.
@@ -79,6 +84,8 @@ export class Input {
       this.rightAxis.y = firstGamepad.axes[3];
       this.leftTrigger = firstGamepad.buttons[6].value;
       this.rightTrigger = firstGamepad.buttons[7].value;
+
+      if(firstGamepad.buttons[9].value) setGameState('paused');
     } else {
       this.rightAxis.x = firstGamepad.axes[3];
       this.rightAxis.y = firstGamepad.axes[4];
@@ -89,10 +96,34 @@ export class Input {
 
       this.leftTrigger = (firstGamepad.axes[2] - this.leftTriggerMin) / (1 - this.leftTriggerMin);
       this.rightTrigger = (firstGamepad.axes[5] - this.rightTriggerMin) / (1 - this.rightTriggerMin);
+
+      if(firstGamepad.buttons[7].value) setGameState('paused');
     }
 
     if(this.aimMode !== 'joystick' && Vector.distanceSquared(oldRight, this.rightAxis) > 0.1) {
       this.aimMode = 'joystick';
     }
+
+    if(this.leftAxis.x > 0.5 && oldLeft.x < 0.5) {
+      nextMenuItem();
+    } else if(this.leftAxis.x < -0.5 && oldLeft.x > -0.5) {
+      previousMenuItem();
+    }
+
+    if(this.heldContemplateJsButton && !oldHeldContemplate) {
+      clickMenuItem();
+    }
   }
+} 
+
+function clickMenuItem() {
+  (document.activeElement as {click?: Function}|undefined)?.click?.();
+}
+
+function nextMenuItem() {
+  (document.activeElement?.nextElementSibling as {focus?: Function}|undefined)?.focus?.();
+}
+
+function previousMenuItem() {
+  (document.activeElement?.previousElementSibling as {focus?: Function}|undefined)?.focus?.();
 }
