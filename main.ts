@@ -2,7 +2,7 @@ declare var SimplexNoise: typeof import('./node_modules/simplex-noise/simplex-no
 
 import {Game} from './game.js';
 import {Input} from './input.js';
-import {audioContext} from './audio.js';
+import {audioContext, masterGain} from './audio.js';
 import {doneLoadingImages} from './images.js';
 
 let game: Game|undefined;
@@ -75,6 +75,12 @@ addEventListener('load', () => {
     }
 
     document.querySelector<HTMLButtonElement>(`#${state} button`)?.focus();
+
+    if(state === 'playing') {
+      masterGain.gain.setValueCurveAtTime([0, 1], audioContext.currentTime, 0.25);
+    } else if(currentState === 'playing') {
+      masterGain.gain.setValueCurveAtTime([1, 0], audioContext.currentTime, 0.25);
+    }
 
     currentState = state;
   }

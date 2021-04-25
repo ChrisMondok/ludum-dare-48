@@ -71,7 +71,7 @@ export class Submarine {
     if(this.velocity.x < 0) this.xscale = -1;
 
     ambienceBiquad.frequency.value = 200 + 4000 * Math.max(0, Math.min(1, 1 - (this.y / 1000)));
-    ambienceGain.gain.value = Math.min(1, Math.sqrt(Vector.distanceSquared(this.velocity)) / 1000);
+    ambienceGain.gain.value = 0.5 * Math.min(1, Math.sqrt(Vector.distanceSquared(this.velocity)) / 1000);
   }
 
   draw(ctx: CanvasRenderingContext2D) {
@@ -189,7 +189,7 @@ export class Submarine {
       this.buoyancy += this.ballastFillRate * INPUT.up * dt;
       if(INPUT.up > 0) this.air -= dt * 1000 * this.ballastAirUsageRate;
 
-      airEscapeGain.gain.value = 0.3 * Math.max((this.buoyancy + 1) / 2, 0) * Math.max(0, -INPUT.up);
+      airEscapeGain.gain.value = 0.2 * Math.max((this.buoyancy + 1) / 2, 0) * Math.max(0, -INPUT.up);
 
       switch(INPUT.aimMode) {
         case 'joystick':
