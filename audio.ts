@@ -41,7 +41,8 @@ export type SoundName = 'thunk1'
   | 'contemplation-04'
   | 'contemplation-05'
   | 'contemplation-06'
-  | 'contemplation-07';
+  | 'contemplation-07'
+  | 'drowned';
 
 export function playCrashSound() {
   playSound(pickSound(['thunk1', 'thunk2', 'thunk3', 'crash1']));
@@ -57,6 +58,10 @@ export function playContemplationSound() {
     'contemplation-06',
     'contemplation-07',
   ]));
+}
+
+export function playDrownedSound() {
+  playSound('drowned');
 }
 
 function pickSound(sounds: SoundName[]) {
@@ -90,6 +95,7 @@ async function loadAllSounds() {
     'contemplation-05',
     'contemplation-06',
     'contemplation-07',
+    'drowned',
   ];
 
   const entries = names.map(async n => {

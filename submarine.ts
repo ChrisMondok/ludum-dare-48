@@ -2,7 +2,7 @@ import type {Game, CaveGeometry} from './game';
 import {Vector, PX_PER_FATHOM} from './math.js';
 import {INPUT} from './input.js';
 import {Image} from './images.js';
-import {airEscapeGain, ambienceBiquad, ambienceGain, playCrashSound, pumpGain, pumpOsc, playContemplationSound} from './audio.js';
+import {airEscapeGain, ambienceBiquad, ambienceGain, playCrashSound, pumpGain, pumpOsc, playContemplationSound, playDrownedSound} from './audio.js';
 import {addBubble} from './bubbles.js';
 
 export class Submarine {
@@ -85,7 +85,9 @@ export class Submarine {
         addBubble(this.x, this.y);
         this.timeSinceLastBubble = 0;
       }
+      const hadAir = this.air > 0;
       this.air -= dt * airLossRate * 1000;
+      if(this.air < 0 && hadAir) playDrownedSound();
     }
 
     this.doCollision(dt);
@@ -99,6 +101,7 @@ export class Submarine {
     this.showQuitWarning = Math.max(0, this.showQuitWarning - dt);
     this.crashSoundCooldown = Math.max(0, this.crashSoundCooldown - dt);
     this.contemplationSoundCooldown = Math.max(0, this.contemplationSoundCooldown - dt);
+    if(!this.isContemplating) this.contemplation = Math.max(this.contemplationSoundCooldown, 1);
   }
 
   draw(ctx: CanvasRenderingContext2D) {
