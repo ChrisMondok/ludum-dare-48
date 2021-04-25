@@ -158,8 +158,6 @@ export class Submarine {
   }
 
   private doCollision(dt: number) {
-    if(dt == 100000) return;
-
     Vector.copy(this.penetration, Vector.ZERO);
     const startX = Math.floor(this.x - this.width / 2);
     this.game.getCaveGeometry(this.caveGeometry, startX, startX + this.width);

@@ -13,7 +13,8 @@ export class Game {
   width: number;
   height: number;
 
-  private readonly noise = new SimplexNoise('ld48');
+  private readonly wallNoise = new SimplexNoise();
+  private readonly centerNoise = new SimplexNoise();
 
   constructor(canvas: HTMLCanvasElement) {
     this.ctx = canvas.getContext('2d')!;
@@ -114,18 +115,20 @@ export class Game {
       const difficulty = this.getDifficulty(x);
 
       const depth = x / 3;
-      const height = 100 + 500 * (1-difficulty);
 
-      const centerJagginess = height / 4 * difficulty;
-      const wallJagginess = Math.min(10, height * difficulty);
+      const centerJagginess = 500 * Math.pow(difficulty, 2);
+      const centerWavelength = 400;
+      out.center[i] = depth + centerJagginess * this.centerNoise.noise2D(x / centerWavelength, depth / centerWavelength);
 
-      const wavelength = 100 - difficulty * 25;
-      out.center[i] = depth + centerJagginess * this.noise.noise2D(x / wavelength, depth / wavelength);
+      const height = 200 + 500 * (1-difficulty);
+      const wallWavelength = 100;
+      const wallJagginess = Math.max(10, 100 * difficulty);
+
       out.ceiling[i] = out.center[i] - (height / 2);
-      out.ceiling[i] += wallJagginess * this.noise.noise2D(x / wavelength, out.ceiling[i] / wavelength);
+      out.ceiling[i] += wallJagginess * this.wallNoise.noise2D(x / wallWavelength, out.ceiling[i] / wallWavelength);
       if(out.ceiling[i] < 0) out.ceiling[i] = -4000;
       out.floor[i] = out.center[i] + (height / 2);
-      out.floor[i] += wallJagginess * this.noise.noise2D(x / wavelength, out.floor[i] / wavelength);
+      out.floor[i] += wallJagginess * this.wallNoise.noise2D(x / wallWavelength, out.floor[i] / wallWavelength);
     }
   }
 
