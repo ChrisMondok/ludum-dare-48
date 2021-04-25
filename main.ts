@@ -2,13 +2,14 @@ declare var SimplexNoise: typeof import('./node_modules/simplex-noise/simplex-no
 
 import {Game} from './game.js';
 import {Input} from './input.js';
+import {audioContext} from './audio.js';
+import {doneLoadingImages} from './images.js';
 
 let game: Game|undefined;
 
 addEventListener('load', () => {
   const canvas = document.querySelector('canvas')!;
   const input = new Input();
-
 
   let previousTime = 0;
   function main(time: number) {
@@ -26,18 +27,22 @@ addEventListener('load', () => {
 
   requestAnimationFrame(main);
 
-  addEventListener('resize', () => {
-    resizeCanvas();
-  });
+  addEventListener('resize', resizeCanvas);
 
   addEventListener('keydown', ({key}) => {
-    if(key === 'Escape') setGameState('paused');
+    if(key === 'Escape') pauseOrQuit();
   });
+
+  addEventListener('blur', pauseOrQuit);
 
   document.querySelectorAll<HTMLButtonElement>('[data-set-state]').forEach(btn => {
     btn.addEventListener('click', () => {
       setGameState(btn.getAttribute('data-set-state')! as GameState);
       btn.blur();
+      if(audioContext.state === 'suspended') {
+        audioContext.resume()
+          .then(() => console.log('audio online'), e => console.error(e));
+      }
     });
   });
 
@@ -56,7 +61,7 @@ addEventListener('load', () => {
   let currentState: GameState;
   function setGameState(state: GameState) {
     if(currentState === state) return;
-    if(state === 'paused' && currentState !== 'playing') return;
+    if(state === 'paused' && !game) return;
     if(currentState) document.body.classList.remove(currentState);
     document.body.classList.add(state);
 
@@ -75,6 +80,18 @@ addEventListener('load', () => {
   }
 
   setGameState('main-menu');
+
+  doneLoadingImages().then(() => (document.getElementById('start-button') as HTMLButtonElement).disabled = false);
+
+  function pauseOrQuit() {
+    if(!game) {
+      setGameState('main-menu');
+    } else if(game.submarine.air <= 0) {
+      setGameState('main-menu');
+    } else {
+      setGameState('paused');
+    }
+  }
 });
 
 type GameState = 'main-menu'|'paused'|'playing'|'how-to-play';

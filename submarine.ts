@@ -1,11 +1,15 @@
 import type {Game, CaveGeometry} from './game';
 import {Vector, PX_PER_FATHOM} from './math.js';
 import {INPUT} from './input.js';
+import {Image} from './images.js';
 
 export class Submarine {
   air = 60 * 5 * 1000; //five minutes of air
   contemplation = 0;
   isContemplating = false;
+
+  @Image("images/submarine.png")
+  readonly image!: HTMLImageElement;
 
   private velocity = {x: 0, y: 0};
   private readonly width = 32;
@@ -21,12 +25,15 @@ export class Submarine {
 
   private readonly horizontalAcceleration = 100;
   private readonly verticalAcceleration = 66;
+  private readonly gravityInAir = 132;
   private readonly drag = 0.5;
 
   private readonly penetration = {x: 0, y: 0};
 
   private spotlightGradient: CanvasGradient|undefined;
   private glowGradient: CanvasGradient|undefined;
+
+  private xscale = 1;
 
   private readonly caveGeometry: CaveGeometry = {
     ceiling: [],
@@ -48,12 +55,19 @@ export class Submarine {
     this.x += this.velocity.x * dt;
     this.y += this.velocity.y * dt;
 
-    this.velocity.y -= this.buoyancy * this.verticalAcceleration * dt;
+    const submergedAmount = Math.min(1, Math.max((this.y + this.height/2) / this.height, 0));
+    this.velocity.y -= this.buoyancy * this.verticalAcceleration * submergedAmount * dt;
+    this.velocity.y += (1 - submergedAmount) * this.gravityInAir * dt;
     this.velocity.x -= this.velocity.x * this.drag * dt;
     this.velocity.y -= this.velocity.y * this.drag * dt;
-    this.air -= dt * 1000;
+    if(this.y > this.height / 2) {
+      this.air -= dt * 1000;
+    }
 
     this.doCollision(dt);
+
+    if(this.velocity.x > 0) this.xscale = 1;
+    if(this.velocity.x < 0) this.xscale = -1;
   }
 
   draw(ctx: CanvasRenderingContext2D) {
@@ -62,7 +76,7 @@ export class Submarine {
     ctx.save();
     ctx.translate(this.x, this.y);
 
-    if(this.y > 20 * PX_PER_FATHOM && !this.isContemplating) {
+    if(this.y > 35 * PX_PER_FATHOM && !this.isContemplating) {
       ctx.fillStyle = this.spotlightGradient;
       ctx.beginPath();
       ctx.moveTo(0, 0);
@@ -71,17 +85,15 @@ export class Submarine {
       ctx.fill();
     }
 
-    ctx.fillStyle = this.glowGradient;
-    ctx.beginPath();
-    ctx.arc(0, 0, 128, 0, 2 * Math.PI, false);
-    ctx.fill();
+    if(this.y > 15 * PX_PER_FATHOM) {
+      ctx.fillStyle = this.glowGradient;
+      ctx.beginPath();
+      ctx.arc(0, 0, 128, 0, 2 * Math.PI, false);
+      ctx.fill();
+    }
 
-    ctx.fillStyle = 'silver';
-    ctx.scale(1, this.height / this.width);
-    ctx.beginPath();
-    ctx.arc(0, 0, this.width / 2, 0, 2 * Math.PI, false);
-    ctx.fill();
-
+    ctx.scale(this.xscale, 1);
+    ctx.drawImage(this.image, -this.width/2, -this.height / 2);
     ctx.restore();
   }
 
@@ -118,7 +130,6 @@ export class Submarine {
     ctx.arc(this.x, this.y, 42, Math.PI * 0.25 * airAmount, Math.PI * -0.25 * airAmount, true);
     ctx.closePath();
     ctx.fill();
-
 
     ctx.strokeStyle = 'red';
     ctx.beginPath();

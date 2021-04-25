@@ -12,7 +12,6 @@ export class Game {
   width: number;
   height: number;
 
-
   private readonly noise = new SimplexNoise('ld48');
 
   constructor(canvas: HTMLCanvasElement) {
@@ -40,12 +39,12 @@ export class Game {
     this.drawCaveWalls();
     this.submarine.drawHud(this.ctx);
     this.ctx.resetTransform();
-    this.drawDebug();
+    if((window as any).debug) this.drawDebug();
     this.drawHud();
   }
 
   private drawHud() {
-    this.ctx.font = '12px sans-serif';
+    this.ctx.font = '16px sans-serif';
     this.ctx.textAlign = 'left';
     this.ctx.textBaseline = 'top';
     this.ctx.fillStyle = 'white';
@@ -59,7 +58,7 @@ export class Game {
     this.ctx.fillText('fathoms', 10 + this.ctx.measureText('00 ').width, 10 - Math.min(this.offset.y + 10, 0));
 
     this.ctx.textAlign = 'right';
-    const airMessage = this.getRemainingAirTime()
+    const airMessage = this.getRemainingAirTime();
     const contemplationMessage = `contemplation: ${Math.floor(this.submarine.contemplation)}`
     let y = 24;
     this.ctx.fillText(airMessage, this.width - 24, y);
@@ -71,8 +70,6 @@ export class Game {
       this.ctx.fillText( `+ ${cps}/s`, this.width - 24, y);
     }
 
-
-
     if(this.submarine.air < 0) {
       const fadeAmount = Math.min(1, this.submarine.air / -5000);
       const blackness = `rgba(0, 0, 0, ${fadeAmount}`;
@@ -83,12 +80,15 @@ export class Game {
       this.ctx.textAlign = 'center';
       this.ctx.textBaseline = 'middle';
       this.ctx.fillText('Game Over', this.width / 2, this.height / 2);
+      this.ctx.font = '24px sans-serif';
+      this.ctx.fillText('Your Score: 0', this.width/2, this.height / 2 + 24 + this.ctx.measureText('Game Over').actualBoundingBoxDescent);
     }
   }
 
   private getRemainingAirTime() {
-    const seconds = Math.floor(this.submarine.air / 1000) % 60;
-    const minutes = Math.floor(this.submarine.air / 60_000);
+    const air = Math.max(this.submarine.air, 0);
+    const seconds = Math.floor(air / 1000) % 60;
+    const minutes = Math.floor(air / 60_000);
     return `${minutes.toString()}:${seconds.toString().padStart(2, '0')} air remaining`;
   }
 

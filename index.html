@@ -16,7 +16,7 @@
         <p> By Chris Mondok </p>
       </section>
       <div class="button-row">
-        <button type="button" data-set-state="playing"> Start </button>
+        <button id="start-button" type="button" data-set-state="playing" disabled> Start </button>
         <button type="button" data-set-state="how-to-play"> How to play </button>
       </div>
     </div>
@@ -136,6 +136,11 @@
               <th> Aim Headlight </th>
               <td> Mouse </td>
               <td> Right Stick </td>
+            </tr>
+            <tr>
+              <th> Quit </th>
+              <td> <kbd>Q</kbd> </td>
+              <td> <joystick-button style="color: red">B</joystick-button> </td>
             </tr>
           </tbody>
         </table>
