@@ -44,7 +44,7 @@ export class Game {
   }
 
   private drawHud() {
-    this.ctx.font = '12px sans';
+    this.ctx.font = '12px sans-serif';
     this.ctx.textAlign = 'left';
     this.ctx.textBaseline = 'top';
     this.ctx.fillStyle = 'white';
@@ -66,7 +66,7 @@ export class Game {
       this.ctx.fillStyle = blackness;
       this.ctx.fillRect(0, 0, this.width, this.height);
       this.ctx.fillStyle = `rgba(255, 255, 255, ${fadeAmount})`;
-      this.ctx.font = '48px sans';
+      this.ctx.font = '48px sans-serif';
       this.ctx.textAlign = 'center';
       this.ctx.textBaseline = 'middle';
       this.ctx.fillText('Game Over', this.width / 2, this.height / 2);
