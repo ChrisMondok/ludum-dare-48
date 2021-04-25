@@ -30,10 +30,10 @@ addEventListener('load', () => {
   addEventListener('resize', resizeCanvas);
 
   addEventListener('keydown', ({key}) => {
-    if(key === 'Escape') pauseOrQuit();
+    if(key === 'Escape') setGameState('paused');
   });
 
-  addEventListener('blur', pauseOrQuit);
+  addEventListener('blur', () => setGameState('paused'));
 
   document.querySelectorAll<HTMLButtonElement>('[data-set-state]').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -59,9 +59,9 @@ addEventListener('load', () => {
   }
 
   let currentState: GameState;
-  function setGameState(state: GameState) {
+  setGameState = function(state: GameState) {
     if(currentState === state) return;
-    if(state === 'paused' && !game) return;
+    if(state === 'paused' && currentState !== 'playing') return;
 
     if(currentState) document.body.classList.remove(currentState);
     document.body.classList.add(state);
@@ -85,16 +85,8 @@ addEventListener('load', () => {
   setGameState('main-menu');
 
   doneLoadingImages().then(() => (document.getElementById('start-button') as HTMLButtonElement).disabled = false);
-
-  function pauseOrQuit() {
-    if(!game) {
-      setGameState('main-menu');
-    } else if(game.submarine.air <= 0) {
-      setGameState('main-menu');
-    } else {
-      setGameState('paused');
-    }
-  }
 });
 
-type GameState = 'main-menu'|'paused'|'playing'|'how-to-play';
+type GameState = 'main-menu'|'paused'|'playing'|'how-to-play'|'game-over';
+
+export let setGameState: (state: GameState) => void;

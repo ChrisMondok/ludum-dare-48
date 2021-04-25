@@ -67,6 +67,10 @@ body.how-to-play #how-to-play {
   display: block;
 }
 
+body.game-over #game-over {
+  display: block;
+}
+
 .button-row {
   display: flex;
   flex-direction: row;

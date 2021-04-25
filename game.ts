@@ -2,6 +2,7 @@ declare var SimplexNoise: typeof import('./node_modules/simplex-noise/simplex-no
 
 import {Submarine} from './submarine.js';
 import {PX_PER_FATHOM} from './math.js';
+import {setGameState} from './main.js';
 
 export class Game {
   readonly cave: CaveGeometry = {ceiling: [], floor: [], center: []};
@@ -28,6 +29,7 @@ export class Game {
     this.getCaveGeometry(this.cave, this.offset.x, this.offset.x + this.width);
     this.submarine.tick(dt);
     this.adjustCamera();
+    if(this.submarine.air < -3000) setGameState('game-over');
   }
 
   draw() {
@@ -71,7 +73,7 @@ export class Game {
     }
 
     if(this.submarine.air < 0) {
-      const fadeAmount = Math.min(1, this.submarine.air / -5000);
+      const fadeAmount = Math.min(1, this.submarine.air / -3000);
       const blackness = `rgba(0, 0, 0, ${fadeAmount}`;
       this.ctx.fillStyle = blackness;
       this.ctx.fillRect(0, 0, this.width, this.height);
@@ -79,9 +81,6 @@ export class Game {
       this.ctx.font = '48px sans-serif';
       this.ctx.textAlign = 'center';
       this.ctx.textBaseline = 'middle';
-      this.ctx.fillText('Game Over', this.width / 2, this.height / 2);
-      this.ctx.font = '24px sans-serif';
-      this.ctx.fillText('Your Score: 0', this.width/2, this.height / 2 + 24 + this.ctx.measureText('Game Over').actualBoundingBoxDescent);
     }
   }
 

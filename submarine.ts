@@ -1,4 +1,5 @@
 import type {Game, CaveGeometry} from './game';
+import {setGameState} from './main.js';
 import {Vector, PX_PER_FATHOM} from './math.js';
 import {INPUT} from './input.js';
 import {Image} from './images.js';
@@ -41,8 +42,12 @@ export class Submarine {
     floor: [],
     center: []
   };
+
+  private showQuitWarning = 0;
   
-  constructor(readonly level: Game, public x: number, public y: number) {}
+  constructor(readonly level: Game, public x: number, public y: number) {
+    document.getElementById('score')!.textContent = Math.floor(this.contemplation).toString();
+  }
 
   tick(dt: number) {
     if(this.air > 0) {
@@ -72,6 +77,8 @@ export class Submarine {
 
     ambienceBiquad.frequency.value = 200 + 4000 * Math.max(0, Math.min(1, 1 - (this.y / 1000)));
     ambienceGain.gain.value = 0.5 * Math.min(1, Math.sqrt(Vector.distanceSquared(this.velocity)) / 1000);
+
+    this.showQuitWarning = Math.max(0, this.showQuitWarning - dt);
   }
 
   draw(ctx: CanvasRenderingContext2D) {
@@ -135,11 +142,20 @@ export class Submarine {
     ctx.closePath();
     ctx.fill();
 
-    ctx.strokeStyle = 'red';
-    ctx.beginPath();
-    ctx.moveTo(this.x, this.y);
-    ctx.lineTo(this.penetration.x + this.x, this.penetration.y + this.y);
-    ctx.stroke();
+    if((window as any).debug) {
+      ctx.strokeStyle = 'red';
+      ctx.beginPath();
+      ctx.moveTo(this.x, this.y);
+      ctx.lineTo(this.penetration.x + this.x, this.penetration.y + this.y);
+      ctx.stroke();
+    }
+
+    if(this.showQuitWarning > 0) {
+      ctx.fillStyle = '#FAA';
+      ctx.textBaseline = 'top';
+      ctx.textAlign = 'center';
+      ctx.fillText('you must be at the surface to exit', this.x, this.y + 50);
+    }
   }
 
   getContemplationRate() {
@@ -191,6 +207,7 @@ export class Submarine {
   }
 
   private handleInput(dt: number) {
+    if(INPUT.quit) this.endGame();
     this.isContemplating = INPUT.contemplate;
 
     if(!this.isContemplating) {
@@ -211,6 +228,15 @@ export class Submarine {
           break;
       }
     }
+  }
+
+  private endGame() {
+    if(this.y > this.height) {
+      this.showQuitWarning = 3;
+      return;
+    }
+    document.getElementById('score')!.textContent = Math.floor(this.contemplation).toString();
+    setGameState('game-over');
   }
 
   private createSpotlightGradient(ctx: CanvasRenderingContext2D) {
