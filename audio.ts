@@ -35,6 +35,13 @@ export type SoundName = 'thunk1'
   | 'thunk2'
   | 'thunk3'
   | 'crash1'
+  | 'art-01'
+  | 'art-02'
+  | 'art-03'
+  | 'art-04'
+  | 'art-05'
+  | 'art-06'
+  | 'art-07'
   | 'contemplation-01'
   | 'contemplation-02'
   | 'contemplation-03'
@@ -42,7 +49,7 @@ export type SoundName = 'thunk1'
   | 'contemplation-05'
   | 'contemplation-06'
   | 'contemplation-07'
-  | 'drowned';
+  | 'drowned'
 
 export function playCrashSound() {
   playSound(pickSound(['thunk1', 'thunk2', 'thunk3', 'crash1']));
@@ -62,6 +69,18 @@ export function playContemplationSound() {
 
 export function playDrownedSound() {
   playSound('drowned');
+}
+
+export function playArtSound() {
+  playSound(pickSound([
+    'art-01',
+    'art-02',
+    'art-03',
+    'art-04',
+    'art-05',
+    'art-06',
+    'art-07',
+  ]));
 }
 
 function pickSound(sounds: SoundName[]) {
@@ -95,6 +114,13 @@ async function loadAllSounds() {
     'contemplation-05',
     'contemplation-06',
     'contemplation-07',
+    'art-01',
+    'art-02',
+    'art-03',
+    'art-04',
+    'art-05',
+    'art-06',
+    'art-07',
     'drowned',
   ];
 

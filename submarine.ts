@@ -4,6 +4,7 @@ import {INPUT} from './input.js';
 import {Image} from './images.js';
 import {airEscapeGain, ambienceBiquad, ambienceGain, playCrashSound, pumpGain, pumpOsc, playContemplationSound, playDrownedSound} from './audio.js';
 import {addBubble} from './bubbles.js';
+import {makeArt} from './art.js';
 
 export class Submarine {
   air = 60 * 8 * 1000;
@@ -63,7 +64,9 @@ export class Submarine {
       this.handleInput(dt);
 
       if(this.isContemplating) {
+        const oldContemplation = this.contemplation;
         this.contemplation += dt * this.game.getContemplationRate(this.y);
+        if(Math.floor(this.contemplation / 10) > Math.floor(oldContemplation / 10)) makeArt();
         if(this.contemplationSoundCooldown === 0) {
           playContemplationSound();
           this.contemplationSoundCooldown = 7 - Math.min(6, 2 * this.game.getContemplationRate(this.y));
@@ -252,7 +255,7 @@ export class Submarine {
       this.buoyancy += this.ballastFillRate * INPUT.up * dt;
       this.buoyancy = Math.max(-1, Math.min(1, this.buoyancy));
       if(INPUT.up > 0 && oldBuoyancy < this.buoyancy) {
-        pumpGain.gain.value = 0.4 * Math.max(0, 1 - this.buoyancy) * INPUT.up;
+        pumpGain.gain.value = 0.1 * Math.max(0, 1 - this.buoyancy) * INPUT.up;
         pumpOsc.frequency.value = INPUT.up * 50 + 50;
         this.air -= dt * 1000 * this.ballastAirUsageRate;
       } else {

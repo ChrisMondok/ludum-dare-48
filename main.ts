@@ -12,6 +12,7 @@ let currentMenu: HTMLDivElement|null = null;
 addEventListener('load', () => {
   const canvas = document.querySelector('canvas')!;
   const input = new Input();
+  const gallery = document.getElementById('gallery')!;
 
   let previousTime = 0;
   function main(time: number) {
@@ -70,11 +71,10 @@ addEventListener('load', () => {
     if(currentState === state) return;
     if(state === 'paused' && currentState !== 'playing') return;
 
-    if(currentState) document.body.classList.remove(currentState);
-    document.body.classList.add(state);
-
     if(state === 'playing' && !game) {
+      moveGallery(document.body);
       game = new Game(canvas);
+      while(gallery.firstChild) gallery.removeChild(gallery.firstChild);
     }
 
     if(state === 'main-menu' && game) {
@@ -87,6 +87,14 @@ addEventListener('load', () => {
 
     masterGain.gain.value = state === 'playing' ? 1 : 0;
 
+
+    if(currentState) document.body.classList.remove(currentState);
+    document.body.classList.add(state);
+
+    if(state === 'game-over') {
+      moveGallery(document.querySelector('#game-over .gallery-container')!);
+    }
+
     currentState = state;
   }
 
@@ -97,6 +105,20 @@ addEventListener('load', () => {
     startButton.disabled = false;
     startButton.focus();
   });
+
+  function moveGallery(where: HTMLElement) {
+    // const {left, top} = gallery.getBoundingClientRect();
+    // gallery.style.width = width+'px';
+    // gallery.style.height = height+'px';
+    // gallery.classList.add('dont-move');
+    where.appendChild(gallery);
+    // const updatedPosition = gallery.getBoundingClientRect();
+    // gallery.style.translate = `${left - updatedPosition.left}px ${top - updatedPosition.top}px`;
+    // requestAnimationFrame(() => {
+    //   gallery.classList.remove('dont-move');
+    //   gallery.style.translate = '';
+    // });
+  }
 });
 
 type GameState = 'main-menu'|'paused'|'playing'|'how-to-play'|'game-over';
