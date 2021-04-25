@@ -13,7 +13,7 @@ addEventListener('load', () => {
   let previousTime = 0;
   function main(time: number) {
     if(previousTime && currentState === 'playing') {
-      const dt = (time - previousTime) / 1000;
+      const dt = Math.min(0.12, (time - previousTime) / 1000);
       input.tick();
       if(game) {
         game.tick(dt);
