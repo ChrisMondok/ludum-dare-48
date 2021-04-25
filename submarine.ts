@@ -61,7 +61,7 @@ export class Submarine {
     this.velocity.y += (1 - submergedAmount) * this.gravityInAir * dt;
     this.velocity.x -= this.velocity.x * this.drag * dt;
     this.velocity.y -= this.velocity.y * this.drag * dt;
-    if(this.y > this.height / 2) {
+    if(this.y > this.height / 2 || this.air < 0) {
       this.air -= dt * 1000;
     }
 
