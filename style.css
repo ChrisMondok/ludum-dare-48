@@ -88,6 +88,9 @@ table {
 
 th {
   font-weight: inherit;
+}
+
+tbody th {
   text-align: right;
 }
 
@@ -102,4 +105,21 @@ tbody th, tbody td {
 
 th, td {
   padding: 1rem;
+}
+
+kbd, joystick-button, joystick-trigger, joystick-direction {
+  font-size: 1rem;
+  border: 1px solid currentcolor;
+  display: inline-block;
+  width: 2em;
+  height: 2em;
+  line-height: 2em;
+}
+
+joystick-button, joystick-direction {
+  border-radius: 50%;
+}
+
+joystick-trigger {
+  border-radius: 0 0 25% 25%;
 }

@@ -7,10 +7,11 @@ export class Game {
   readonly cave: CaveGeometry = {ceiling: [], floor: [], center: []};
   readonly ctx: CanvasRenderingContext2D;
   readonly offset = {x: 0, y: 0};
+  readonly submarine: Submarine;
+
   width: number;
   height: number;
 
-  readonly submarine: Submarine;
 
   private readonly noise = new SimplexNoise('ld48');
 
@@ -58,7 +59,19 @@ export class Game {
     this.ctx.fillText('fathoms', 10 + this.ctx.measureText('00 ').width, 10 - Math.min(this.offset.y + 10, 0));
 
     this.ctx.textAlign = 'right';
-    this.ctx.fillText(this.getRemainingAirTime(), this.width - 24, 24);
+    const airMessage = this.getRemainingAirTime()
+    const contemplationMessage = `contemplation: ${Math.floor(this.submarine.contemplation)}`
+    let y = 24;
+    this.ctx.fillText(airMessage, this.width - 24, y);
+    y += 12 + this.ctx.measureText(airMessage).actualBoundingBoxDescent;
+    this.ctx.fillText(contemplationMessage, this.width - 24, y);
+    if(this.submarine.isContemplating) {
+      y += 12 + this.ctx.measureText(contemplationMessage).actualBoundingBoxDescent;
+      const cps = Math.floor(this.submarine.getContemplationRate() * 100) / 100;
+      this.ctx.fillText( `+ ${cps}/s`, this.width - 24, y);
+    }
+
+
 
     if(this.submarine.air < 0) {
       const fadeAmount = Math.min(1, this.submarine.air / -5000);

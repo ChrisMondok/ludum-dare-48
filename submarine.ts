@@ -1,29 +1,32 @@
 import type {Game, CaveGeometry} from './game';
-import {Vector} from './math.js';
+import {Vector, PX_PER_FATHOM} from './math.js';
 import {INPUT} from './input.js';
 
 export class Submarine {
-  headlightAngle = 0;
-
-  velocity = {x: 0, y: 0};
-
   air = 60 * 5 * 1000; //five minutes of air
-  readonly maxAir = this.air;
+  contemplation = 0;
+  isContemplating = false;
 
-  readonly width = 32;
-  readonly height = 16;
+  private velocity = {x: 0, y: 0};
+  private readonly width = 32;
+  private readonly height = 16;
+
+  private headlightAngle = 0;
+
+  private readonly maxAir = this.air;
 
   private buoyancy = 0;
-  private spotlightGradient: CanvasGradient|undefined;
-  private glowGradient: CanvasGradient|undefined;
-  private ballastAirUsageRate = 10;
-
+  private readonly ballastAirUsageRate = 10;
   private readonly ballastFillRate = 2;
+
   private readonly horizontalAcceleration = 100;
   private readonly verticalAcceleration = 66;
   private readonly drag = 0.5;
 
   private readonly penetration = {x: 0, y: 0};
+
+  private spotlightGradient: CanvasGradient|undefined;
+  private glowGradient: CanvasGradient|undefined;
 
   private readonly caveGeometry: CaveGeometry = {
     ceiling: [],
@@ -36,6 +39,8 @@ export class Submarine {
   tick(dt: number) {
     if(this.air > 0) {
       this.handleInput(dt);
+
+      if(this.isContemplating) this.contemplation += dt * this.getContemplationRate();
     }
 
     this.buoyancy = Math.max(-1, Math.min(1, this.buoyancy));
@@ -57,12 +62,14 @@ export class Submarine {
     ctx.save();
     ctx.translate(this.x, this.y);
 
-    ctx.fillStyle = this.spotlightGradient;
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.arc(0, 0, 500, this.headlightAngle - 0.2, this.headlightAngle + 0.2, false);
-    ctx.lineTo(0, 0);
-    ctx.fill();
+    if(this.y > 20 * PX_PER_FATHOM && !this.isContemplating) {
+      ctx.fillStyle = this.spotlightGradient;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.arc(0, 0, 500, this.headlightAngle - 0.2, this.headlightAngle + 0.2, false);
+      ctx.lineTo(0, 0);
+      ctx.fill();
+    }
 
     ctx.fillStyle = this.glowGradient;
     ctx.beginPath();
@@ -120,6 +127,10 @@ export class Submarine {
     ctx.stroke();
   }
 
+  getContemplationRate() {
+    return Math.pow(this.y / 2000, 2);
+  }
+
   private doCollision(dt: number) {
     if(dt == 100000) return;
 
@@ -156,20 +167,24 @@ export class Submarine {
   }
 
   private handleInput(dt: number) {
-    this.velocity.x += this.horizontalAcceleration * INPUT.right * dt;
-    this.buoyancy += this.ballastFillRate * INPUT.up * dt;
+    this.isContemplating = INPUT.contemplate;
 
-    switch(INPUT.aimMode) {
-      case 'joystick':
-        if(Vector.distanceSquared(INPUT.rightAxis) > 0.1) {
-          this.headlightAngle = Math.atan2(INPUT.rightAxis.y, INPUT.rightAxis.x);
-        }
-        break;
-      case 'mouse':
-        this.headlightAngle = Math.atan2(INPUT.mouse.y + this.level.offset.y - this.y, INPUT.mouse.x + this.level.offset.x - this.x);
-        break;
+    if(!this.isContemplating) {
+      this.velocity.x += this.horizontalAcceleration * INPUT.right * dt;
+      this.buoyancy += this.ballastFillRate * INPUT.up * dt;
+      if(INPUT.up > 0) this.air -= dt * 1000 * this.ballastAirUsageRate;
+
+      switch(INPUT.aimMode) {
+        case 'joystick':
+          if(Vector.distanceSquared(INPUT.rightAxis) > 0.1) {
+            this.headlightAngle = Math.atan2(INPUT.rightAxis.y, INPUT.rightAxis.x);
+          }
+          break;
+        case 'mouse':
+          this.headlightAngle = Math.atan2(INPUT.mouse.y + this.level.offset.y - this.y, INPUT.mouse.x + this.level.offset.x - this.x);
+          break;
+      }
     }
-    if(INPUT.up > 0) this.air -= dt * 1000 * this.ballastAirUsageRate;
   }
 
   private createSpotlightGradient(ctx: CanvasRenderingContext2D) {

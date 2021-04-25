@@ -52,6 +52,7 @@
 
       <section>
         <h2> Submarine Operation </h2>
+
         <p>
           Your submarine can be propelled left and right. You can dive and surface by adding
           and removing air to the ballast tank. This air is is also your breathing air, so
@@ -61,15 +62,30 @@
         <p>
           Your submarine is equipped with a headlight. Aim it with the mouse, or the right joystick.
         </p>
+
+        <p>
+          Operating the submarine requires your full concentration,
+          you cannot pilot it while contemplating life.
+        </p>
         <table>
           <thead>
             <tr>
-              <th> Input </th>
+              <th> Action </th>
               <th> Keyboard </th>
               <th> Controller </th>
             </tr>
           </thead>
           <tbody>
+            <tr>
+              <th>Contemplate the<br/>
+                nature of life</th>
+              <td>
+                <kbd>E</kbd>
+              </td>
+              <td>
+                <joystick-button style="color: green">A</joystick-button>
+              </td>
+            </tr>
             <tr>
               <th>
                 Move right
@@ -94,24 +110,26 @@
             </tr>
             <tr>
               <th>
-                Increase ballast (ascend)<br/><em class="danger">consumes air</em>
+                Increase ballast<br/>
+                (ascend, <em class="danger">consumes air</em>)
               </th>
               <td>
                 <kbd>W</kbd>
               </td>
               <td>
-                RT
+                <joystick-trigger> RT </joystick-trigger>
               </td>
             </tr>
             <tr>
               <th>
-                Decrease ballast (descend)
+                Decrease ballast<br/>
+                (descend)
               </th>
               <td>
                 <kbd>D</kbd>
               </td>
               <td>
-                LT
+                <joystick-trigger> LT </joystick-trigger>
               </td>
             </tr>
             <tr>

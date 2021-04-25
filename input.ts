@@ -10,6 +10,7 @@ const RIGHT_KEYS = Object.freeze(['d', 'ArrowRight']);
 export class Input {
   up = 0;
   right = 0;
+  contemplate = false;
   readonly mouse = {x: 0, y: 0};
   readonly leftAxis = {x: 0, y: 0};
   readonly rightAxis = {x: 0, y: 0};
@@ -17,6 +18,7 @@ export class Input {
   rightTrigger = 0;
 
   private readonly heldKeys = new Set<string>();
+  private heldContemplateJsButton = false;
 
   // on Firefox, triggers return zero until they're moved, then released, at which point they return -1.
   private leftTriggerMin = 0;
@@ -41,6 +43,7 @@ export class Input {
     this.updateGamepads();
     this.up = this.rightTrigger - this.leftTrigger + this.readKeyboardAxis(DOWN_KEYS, UP_KEYS);
     this.right = this.leftAxis.x + this.readKeyboardAxis(LEFT_KEYS, RIGHT_KEYS);
+    this.contemplate = this.heldContemplateJsButton || this.heldKeys.has('e');
   }
 
   private readKeyboardAxis(negativeBindings: readonly string[], positiveBindings: readonly string[]) {
@@ -58,6 +61,8 @@ export class Input {
       this.aimMode = 'mouse';
       return;
     }
+
+    this.heldContemplateJsButton = firstGamepad.buttons[0].pressed;
 
     const oldRight = {x: this.rightAxis.y, y: this.rightAxis.y};
 
