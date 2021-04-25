@@ -1,4 +1,4 @@
-import type {Game} from './game';
+import type {Game, CaveGeometry} from './game';
 import {Vector} from './math.js';
 import {INPUT} from './input.js';
 
@@ -10,6 +10,9 @@ export class Submarine {
   air = 60 * 5 * 1000; //five minutes of air
   readonly maxAir = this.air;
 
+  readonly width = 32;
+  readonly height = 16;
+
   private buoyancy = 0;
   private spotlightGradient: CanvasGradient|undefined;
   private glowGradient: CanvasGradient|undefined;
@@ -19,25 +22,20 @@ export class Submarine {
   private readonly horizontalAcceleration = 100;
   private readonly verticalAcceleration = 66;
   private readonly drag = 0.5;
+
+  private readonly penetration = {x: 0, y: 0};
+
+  private readonly caveGeometry: CaveGeometry = {
+    ceiling: [],
+    floor: [],
+    center: []
+  };
   
   constructor(readonly level: Game, public x: number, public y: number) {}
 
   tick(dt: number) {
     if(this.air > 0) {
-      this.velocity.x += this.horizontalAcceleration * INPUT.right * dt;
-      this.buoyancy += this.ballastFillRate * INPUT.up * dt;
-
-      switch(INPUT.aimMode) {
-        case 'joystick':
-          if(Vector.distanceSquared(INPUT.rightAxis) > 0.1) {
-            this.headlightAngle = Math.atan2(INPUT.rightAxis.y, INPUT.rightAxis.x);
-          }
-          break;
-        case 'mouse':
-          this.headlightAngle = Math.atan2(INPUT.mouse.y + this.level.offset.y - this.y, INPUT.mouse.x + this.level.offset.x - this.x);
-          break;
-      }
-      if(INPUT.up > 0) this.air -= dt * 1000 * this.ballastAirUsageRate;
+      this.handleInput(dt);
     }
 
     this.buoyancy = Math.max(-1, Math.min(1, this.buoyancy));
@@ -49,6 +47,8 @@ export class Submarine {
     this.velocity.x -= this.velocity.x * this.drag * dt;
     this.velocity.y -= this.velocity.y * this.drag * dt;
     this.air -= dt * 1000;
+
+    this.doCollision(dt);
   }
 
   draw(ctx: CanvasRenderingContext2D) {
@@ -56,10 +56,6 @@ export class Submarine {
     this.glowGradient = this.glowGradient ?? this.createGlowGradient(ctx);
     ctx.save();
     ctx.translate(this.x, this.y);
-    ctx.fillStyle = 'silver';
-    ctx.beginPath();
-    ctx.arc(0, 0, 12, 0, 2 * Math.PI, false);
-    ctx.fill();
 
     ctx.fillStyle = this.spotlightGradient;
     ctx.beginPath();
@@ -71,6 +67,12 @@ export class Submarine {
     ctx.fillStyle = this.glowGradient;
     ctx.beginPath();
     ctx.arc(0, 0, 128, 0, 2 * Math.PI, false);
+    ctx.fill();
+
+    ctx.fillStyle = 'silver';
+    ctx.scale(1, this.height / this.width);
+    ctx.beginPath();
+    ctx.arc(0, 0, this.width / 2, 0, 2 * Math.PI, false);
     ctx.fill();
 
     ctx.restore();
@@ -109,6 +111,65 @@ export class Submarine {
     ctx.arc(this.x, this.y, 42, Math.PI * 0.25 * airAmount, Math.PI * -0.25 * airAmount, true);
     ctx.closePath();
     ctx.fill();
+
+
+    ctx.strokeStyle = 'red';
+    ctx.beginPath();
+    ctx.moveTo(this.x, this.y);
+    ctx.lineTo(this.penetration.x + this.x, this.penetration.y + this.y);
+    ctx.stroke();
+  }
+
+  private doCollision(dt: number) {
+    if(dt == 100000) return;
+
+    Vector.copy(this.penetration, Vector.ZERO);
+    const startX = Math.floor(this.x - this.width / 2);
+    this.level.getCaveGeometry(this.caveGeometry, startX, startX + this.width);
+    if(this.caveGeometry.floor.length !== this.width) throw new Error('oh no');
+
+    let totalPenentration = 0
+
+    for(let i = 0; i < this.width; i++) {
+      // const xOffset = ((i / this.width) * 2 - 1) * this.width + 1;
+      const yOffset = Math.sin(Math.PI * (i / this.width)) * this.height / 2;
+      const y = this.y + yOffset;
+      const penetrationDepth = -Math.min(0, this.caveGeometry.floor[i] - y);
+      totalPenentration += penetrationDepth;
+    }
+
+    let slope = 0;
+    if(totalPenentration > 0) {
+      for(let i = 1; i < this.caveGeometry.floor.length; i++) {
+        slope += this.caveGeometry.floor[i] - this.caveGeometry.floor[i - 1];
+      }
+      slope /= this.caveGeometry.floor.length;
+    }
+
+    this.penetration.x = slope * totalPenentration;
+    this.penetration.y = -totalPenentration;
+
+    this.x += this.penetration.x * dt;
+    this.y += this.penetration.y * dt;
+    this.velocity.x += this.penetration.x * dt;
+    this.velocity.y += this.penetration.y * dt;
+  }
+
+  private handleInput(dt: number) {
+    this.velocity.x += this.horizontalAcceleration * INPUT.right * dt;
+    this.buoyancy += this.ballastFillRate * INPUT.up * dt;
+
+    switch(INPUT.aimMode) {
+      case 'joystick':
+        if(Vector.distanceSquared(INPUT.rightAxis) > 0.1) {
+          this.headlightAngle = Math.atan2(INPUT.rightAxis.y, INPUT.rightAxis.x);
+        }
+        break;
+      case 'mouse':
+        this.headlightAngle = Math.atan2(INPUT.mouse.y + this.level.offset.y - this.y, INPUT.mouse.x + this.level.offset.x - this.x);
+        break;
+    }
+    if(INPUT.up > 0) this.air -= dt * 1000 * this.ballastAirUsageRate;
   }
 
   private createSpotlightGradient(ctx: CanvasRenderingContext2D) {

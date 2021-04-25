@@ -67,6 +67,8 @@ export class Game {
       this.ctx.fillRect(0, 0, this.width, this.height);
       this.ctx.fillStyle = `rgba(255, 255, 255, ${fadeAmount})`;
       this.ctx.font = '48px sans';
+      this.ctx.textAlign = 'center';
+      this.ctx.textBaseline = 'middle';
       this.ctx.fillText('Game Over', this.width / 2, this.height / 2);
     }
   }
@@ -90,6 +92,28 @@ export class Game {
       // off screen, as the cave geometry won't be set there.
       if(out.y > this.cave.floor[out.x - this.offset.x]) return;
       if(out.y < this.cave.ceiling[out.x - this.offset.y]) return;
+    }
+  }
+
+  getCaveGeometry(out: CaveGeometry, xStart: number, xEnd: number): void {
+    for(let i = 0; i < xEnd - xStart; i++) {
+      const x = i + xStart;
+
+      const difficulty = this.getDifficulty(x);
+
+      const depth = x / 3;
+      const height = 80 + 500 * (1-difficulty);
+
+      const centerJagginess = 100 * difficulty;
+      const wallJagginess = Math.min(10, height * difficulty);
+
+      const wavelength = 50 + difficulty * 50;
+      out.center[i] = depth + centerJagginess * this.noise.noise2D(x / wavelength, depth / wavelength);
+      out.ceiling[i] = out.center[i] - (height / 2);
+      out.ceiling[i] += wallJagginess * this.noise.noise2D(x / wavelength, out.ceiling[i] / wavelength);
+      if(out.ceiling[i] < 0) out.ceiling[i] = -4000;
+      out.floor[i] = out.center[i] + (height / 2);
+      out.floor[i] += wallJagginess * this.noise.noise2D(x / wavelength, out.floor[i] / wavelength);
     }
   }
 
@@ -147,28 +171,6 @@ export class Game {
     this.ctx.stroke();
   }
 
-  private getCaveGeometry(out: CaveGeometry, xStart: number, xEnd: number): void {
-    for(let i = 0; i < xEnd - xStart; i++) {
-      const x = i + xStart;
-
-      const difficulty = this.getDifficulty(x);
-
-      const depth = x / 3;
-      const height = 80 + 500 * (1-difficulty);
-
-      const centerJagginess = 100 * difficulty;
-      const wallJagginess = Math.min(10, height * difficulty);
-
-      const wavelength = 50 + difficulty * 50;
-      out.center[i] = depth + centerJagginess * this.noise.noise2D(x / wavelength, depth / wavelength);
-      out.ceiling[i] = out.center[i] - (height / 2);
-      out.ceiling[i] += wallJagginess * this.noise.noise2D(x / wavelength, out.ceiling[i] / wavelength);
-      if(out.ceiling[i] < 0) out.ceiling[i] = -4000;
-      out.floor[i] = out.center[i] + (height / 2);
-      out.floor[i] += wallJagginess * this.noise.noise2D(x / wavelength, out.floor[i] / wavelength);
-    }
-  }
-
   private getDifficulty(x: number) {
     let scaled = x / 5000;
     if(scaled < 1) return Math.pow(scaled, 2) / 3;
@@ -183,9 +185,8 @@ export class Game {
   }
 }
 
-interface CaveGeometry {
+export interface CaveGeometry {
   ceiling: number[];
   floor: number[];
   center: number[];
 }
-
