@@ -193,6 +193,10 @@ export class Game {
       this.ctx.lineTo(x, this.height - 100 * difficulty);
     }
     this.ctx.stroke();
+
+    this.ctx.textAlign = 'center';
+    this.ctx.textBaseline = 'top';
+    this.ctx.fillText('SUPER SECRET DEBUG MODE. Press ` to exit.', this.width / 2, 24);
   }
 
   getContemplationRate(y: number) {

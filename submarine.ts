@@ -2,7 +2,7 @@ import type {Game, CaveGeometry} from './game';
 import {Vector, PX_PER_FATHOM} from './math.js';
 import {INPUT} from './input.js';
 import {Image} from './images.js';
-import {airEscapeGain, ambienceBiquad, ambienceGain, playSound, pumpGain, pumpOsc} from './audio.js';
+import {airEscapeGain, ambienceBiquad, ambienceGain, playCrashSound, pumpGain, pumpOsc, playContemplationSound} from './audio.js';
 import {addBubble} from './bubbles.js';
 
 export class Submarine {
@@ -39,6 +39,8 @@ export class Submarine {
 
   private damage = 0;
   private readonly leakAtMaxDamage = 2;
+  private readonly dmgThreshold = 2000;
+  private readonly dmgScale = 100;
 
   private readonly caveGeometry: CaveGeometry = {
     ceiling: [],
@@ -47,6 +49,7 @@ export class Submarine {
   };
 
   private showQuitWarning = 0;
+  private contemplationSoundCooldown = 2;
   private crashSoundCooldown = 0;
   private timeSinceLastBubble = 0;
   
@@ -59,7 +62,13 @@ export class Submarine {
     if(this.air > 0) {
       this.handleInput(dt);
 
-      if(this.isContemplating) this.contemplation += dt * this.game.getContemplationRate(this.y);
+      if(this.isContemplating) {
+        this.contemplation += dt * this.game.getContemplationRate(this.y);
+        if(this.contemplationSoundCooldown === 0) {
+          playContemplationSound();
+          this.contemplationSoundCooldown = 7 - Math.min(6, 2 * this.game.getContemplationRate(this.y));
+        }
+      }
     }
 
     this.x += this.velocity.x * dt;
@@ -89,6 +98,7 @@ export class Submarine {
 
     this.showQuitWarning = Math.max(0, this.showQuitWarning - dt);
     this.crashSoundCooldown = Math.max(0, this.crashSoundCooldown - dt);
+    this.contemplationSoundCooldown = Math.max(0, this.contemplationSoundCooldown - dt);
   }
 
   draw(ctx: CanvasRenderingContext2D) {
@@ -144,7 +154,7 @@ export class Submarine {
     ctx.closePath();
     ctx.stroke();
 
-    ctx.fillStyle = INPUT.up > 0 ? '#F88' : 'white';
+    ctx.fillStyle = (INPUT.up > 0 && this.buoyancy < 1) ? '#F88' : 'white';
     ctx.beginPath();
     const airAmount = Math.max(this.air, 0) / this.maxAir;
     ctx.arc(this.x, this.y, 32, Math.PI * -0.25 * airAmount, Math.PI * 0.25 * airAmount, false);
@@ -156,14 +166,24 @@ export class Submarine {
       ctx.fillStyle = '#FAA';
       ctx.textBaseline = 'top';
       ctx.textAlign = 'center';
+      ctx.font = '16px sans';
       ctx.fillText('you must be at the surface to exit', this.x, this.y + 50);
     }
 
     if((window as any).debug) {
-      ctx.strokeStyle = 'red';
+      ctx.fillStyle = ctx.strokeStyle = 'red';
       ctx.beginPath();
       ctx.moveTo(this.x, this.y);
       ctx.lineTo(this.penetration.x + this.x, this.penetration.y + this.y);
+      ctx.stroke();
+
+      ctx.font = '16px sans';
+      ctx.textBaseline = 'top';
+      ctx.textAlign = 'center';
+      ctx.fillText(this.damage.toFixed(3), this.x, this.y + 32);
+
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, Math.sqrt(this.dmgThreshold), 0, 2 * Math.PI, false);
       ctx.stroke();
     }
   }
@@ -210,13 +230,11 @@ export class Submarine {
     this.velocity.y += this.penetration.y * dt;
 
     const crashAmount = Vector.distanceSquared(this.penetration)
-    if(crashAmount > 2000) {
-      this.damage += crashAmount / 10000;
-      console.log(this.damage);
+    if(crashAmount > this.dmgThreshold) {
+      this.damage += Math.sqrt(crashAmount) / this.dmgScale;
       if(this.crashSoundCooldown === 0) {
         this.crashSoundCooldown = 0.1 + Math.random() * 0.3;
-        const soundToPlay = (['thunk1', 'thunk2', 'thunk3', 'crash1'] as const)[Math.floor(Math.random() * 4)];
-        playSound(soundToPlay);
+        playCrashSound();
       }
     }
   }
@@ -231,7 +249,7 @@ export class Submarine {
       this.buoyancy += this.ballastFillRate * INPUT.up * dt;
       this.buoyancy = Math.max(-1, Math.min(1, this.buoyancy));
       if(INPUT.up > 0 && oldBuoyancy < this.buoyancy) {
-        pumpGain.gain.value = Math.max(0, 1 - this.buoyancy) * INPUT.up;
+        pumpGain.gain.value = 0.4 * Math.max(0, 1 - this.buoyancy) * INPUT.up;
         pumpOsc.frequency.value = INPUT.up * 50 + 50;
         this.air -= dt * 1000 * this.ballastAirUsageRate;
       } else {

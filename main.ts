@@ -48,7 +48,7 @@ addEventListener('load', () => {
       btn.blur();
       if(audioContext.state === 'suspended') {
         audioContext.resume()
-          .then(() => console.log('audio online'), e => console.error(e));
+          .then(() => console.log('audio resumed'), e => console.error(e));
       }
     });
   });

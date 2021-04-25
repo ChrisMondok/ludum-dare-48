@@ -31,9 +31,39 @@ audioContext.audioWorklet.addModule('dist/noise-processor.js').then(_x => {
   noise.connect(ambienceGain);
 });
 
-export type SoundName = 'thunk1' | 'thunk2' | 'thunk3' | 'crash1';
+export type SoundName = 'thunk1'
+  | 'thunk2'
+  | 'thunk3'
+  | 'crash1'
+  | 'contemplation-01'
+  | 'contemplation-02'
+  | 'contemplation-03'
+  | 'contemplation-04'
+  | 'contemplation-05'
+  | 'contemplation-06'
+  | 'contemplation-07';
 
-export function playSound(sound: SoundName) {
+export function playCrashSound() {
+  playSound(pickSound(['thunk1', 'thunk2', 'thunk3', 'crash1']));
+}
+
+export function playContemplationSound() {
+  playSound(pickSound([
+    'contemplation-01',
+    'contemplation-02',
+    'contemplation-03',
+    'contemplation-04',
+    'contemplation-05',
+    'contemplation-06',
+    'contemplation-07',
+  ]));
+}
+
+function pickSound(sounds: SoundName[]) {
+  return sounds[Math.floor(Math.random() * sounds.length)];
+}
+
+function playSound(sound: SoundName) {
   const source = audioContext.createBufferSource()
   source.buffer = soundMap.get(sound)!;
   source.connect(masterGain);
@@ -48,7 +78,19 @@ export async function doneLoadingSounds() {
 }
 
 async function loadAllSounds() {
-  const names: SoundName[] = ['thunk1', 'thunk2', 'thunk3', 'crash1'];
+  const names: SoundName[] = [
+    'thunk1',
+    'thunk2',
+    'thunk3',
+    'crash1',
+    'contemplation-01',
+    'contemplation-02',
+    'contemplation-03',
+    'contemplation-04',
+    'contemplation-05',
+    'contemplation-06',
+    'contemplation-07',
+  ];
 
   const entries = names.map(async n => {
     const buffer = await loadSound(n)
