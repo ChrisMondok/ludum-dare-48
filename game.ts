@@ -46,7 +46,7 @@ export class Game {
   private drawHud() {
     this.ctx.font = '16px sans-serif';
     this.ctx.textAlign = 'left';
-    this.ctx.textBaseline = 'top';
+    this.ctx.textBaseline = 'middle';
     this.ctx.fillStyle = 'white';
     const offset = PX_PER_FATHOM * Math.floor(this.offset.y / PX_PER_FATHOM);
     for(let i = 0; i < this.height + PX_PER_FATHOM; i += PX_PER_FATHOM) {
