@@ -154,26 +154,35 @@ export class Submarine {
     this.level.getCaveGeometry(this.caveGeometry, startX, startX + this.width);
     if(this.caveGeometry.floor.length !== this.width) throw new Error('oh no');
 
-    let totalPenentration = 0
+    let floorPenetration = 0
+    let ceilingPenetration = 0;
 
     for(let i = 0; i < this.width; i++) {
-      // const xOffset = ((i / this.width) * 2 - 1) * this.width + 1;
       const yOffset = Math.sin(Math.PI * (i / this.width)) * this.height / 2;
-      const y = this.y + yOffset;
-      const penetrationDepth = -Math.min(0, this.caveGeometry.floor[i] - y);
-      totalPenentration += penetrationDepth;
+      floorPenetration -= Math.min(0, this.caveGeometry.floor[i] - (this.y + yOffset));
+      ceilingPenetration -= Math.min(0, (this.y - yOffset) - this.caveGeometry.ceiling[i]);
     }
 
-    let slope = 0;
-    if(totalPenentration > 0) {
+    if(floorPenetration > 0) {
+      let slope = 0;
       for(let i = 1; i < this.caveGeometry.floor.length; i++) {
         slope += this.caveGeometry.floor[i] - this.caveGeometry.floor[i - 1];
       }
       slope /= this.caveGeometry.floor.length;
+      this.penetration.x += slope * floorPenetration;
+      this.penetration.y += -floorPenetration;
     }
 
-    this.penetration.x = slope * totalPenentration;
-    this.penetration.y = -totalPenentration;
+    if(ceilingPenetration > 0) {
+      let slope = 0;
+      for(let i = 1; i < this.caveGeometry.floor.length; i++) {
+        slope += this.caveGeometry.ceiling[i] - this.caveGeometry.ceiling[i - 1];
+      }
+      slope /= this.caveGeometry.ceiling.length;
+      this.penetration.x -= slope * ceilingPenetration;
+      this.penetration.y += ceilingPenetration;
+    }
+
 
     this.x += this.penetration.x * dt;
     this.y += this.penetration.y * dt;
