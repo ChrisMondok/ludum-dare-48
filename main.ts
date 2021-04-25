@@ -62,6 +62,7 @@ addEventListener('load', () => {
   function setGameState(state: GameState) {
     if(currentState === state) return;
     if(state === 'paused' && !game) return;
+
     if(currentState) document.body.classList.remove(currentState);
     document.body.classList.add(state);
 
@@ -76,11 +77,7 @@ addEventListener('load', () => {
 
     document.querySelector<HTMLButtonElement>(`#${state} button`)?.focus();
 
-    if(state === 'playing') {
-      masterGain.gain.setValueCurveAtTime([0, 1], audioContext.currentTime, 0.25);
-    } else if(currentState === 'playing') {
-      masterGain.gain.setValueCurveAtTime([1, 0], audioContext.currentTime, 0.25);
-    }
+    masterGain.gain.value = state === 'playing' ? 1 : 0;
 
     currentState = state;
   }
