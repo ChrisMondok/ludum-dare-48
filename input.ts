@@ -45,7 +45,7 @@ export class Input {
     this.updateGamepads();
     this.up = this.rightTrigger - this.leftTrigger + this.readKeyboardAxis(DOWN_KEYS, UP_KEYS);
     this.right = this.leftAxis.x + this.readKeyboardAxis(LEFT_KEYS, RIGHT_KEYS);
-    this.contemplate = this.heldContemplateJsButton || this.heldKeys.has('e');
+    this.contemplate = this.heldContemplateJsButton || this.heldKeys.has('e') || this.heldKeys.has('c');
     this.quit = this.heldQuitJsButton || this.heldKeys.has('q');
   }
 
