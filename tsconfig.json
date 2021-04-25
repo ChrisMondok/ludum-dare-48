@@ -22,6 +22,7 @@
   },
   "rootDir": "./",
   "include": [
-    "main.ts"
+    "main.ts",
+    "noise-processor.ts"
   ]
 }

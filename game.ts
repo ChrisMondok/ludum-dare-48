@@ -17,7 +17,7 @@ export class Game {
   constructor(canvas: HTMLCanvasElement) {
     this.ctx = canvas.getContext('2d')!;
     this.getCaveGeometry(this.cave, 0, canvas.width);
-    this.submarine = new Submarine(this, canvas.width / 2, this.cave.center[Math.floor(canvas.width / 2)]);
+    this.submarine = new Submarine(this, 100, 0);
     this.width = canvas.width;
     this.height = canvas.height;
     (window as any).ctx = this.ctx;
