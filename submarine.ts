@@ -76,7 +76,7 @@ export class Submarine {
         addBubble(this.x, this.y);
         this.timeSinceLastBubble = 0;
       }
-      this.air -= dt * airLossRate
+      this.air -= dt * airLossRate * 1000;
     }
 
     this.doCollision(dt);

@@ -23,7 +23,7 @@ export function tickBubbles(dt: number) {
   for(const bubble of bubbles) {
     if(bubble.size === 0) continue;
     bubble.x += dt * 100 * bubbleNoise.noise2D(bubble.x / 10, bubble.y / 10);
-    bubble.y -= dt * 50;
+    bubble.y -= dt * 100;
     bubble.size += dt;
     if(bubble.size > 5) bubble.size = 0;
     if(bubble.y < bubble.size) bubble.size = 0;
