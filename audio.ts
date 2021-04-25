@@ -16,6 +16,15 @@ export const ambienceGain = audioContext.createGain();
 ambienceGain.gain.value = 0;
 ambienceGain.connect(ambienceBiquad);
 
+export const pumpGain = audioContext.createGain();
+pumpGain.gain.value = 0;
+pumpGain.connect(audioContext.destination);
+
+export const pumpOsc = audioContext.createOscillator();
+pumpOsc.start();
+pumpOsc.type = 'sawtooth';
+pumpOsc.connect(pumpGain);
+
 audioContext.audioWorklet.addModule('dist/noise-processor.js').then(_x => {
   const noise = new AudioWorkletNode(audioContext, 'noise-processor');
   noise.connect(airEscapeGain);
@@ -53,4 +62,13 @@ async function loadSound(name: SoundName) {
   const data = await fetch(`sounds/${name}.wav`);
   const arrayBuffer = await data.arrayBuffer();
   return await audioContext.decodeAudioData(arrayBuffer);
+}
+
+var numCoeffs = 64; // The more coefficients you use, the better the approximation
+var realCoeffs = new Float32Array(numCoeffs);
+var imagCoeffs = new Float32Array(numCoeffs);
+
+realCoeffs[0] = 0.2;
+for (var i = 1; i < numCoeffs; i++) { // note i starts at 1
+      imagCoeffs[i] = 1 / (i * Math.PI);
 }

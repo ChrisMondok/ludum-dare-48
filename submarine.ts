@@ -2,7 +2,8 @@ import type {Game, CaveGeometry} from './game';
 import {Vector, PX_PER_FATHOM} from './math.js';
 import {INPUT} from './input.js';
 import {Image} from './images.js';
-import {airEscapeGain, ambienceBiquad, ambienceGain, playSound} from './audio.js';
+import {airEscapeGain, ambienceBiquad, ambienceGain, playSound, pumpGain, pumpOsc} from './audio.js';
+import {addBubble} from './bubbles.js';
 
 export class Submarine {
   air = 60 * 8 * 1000;
@@ -47,19 +48,19 @@ export class Submarine {
 
   private showQuitWarning = 0;
   private crashSoundCooldown = 0;
+  private timeSinceLastBubble = 0;
   
   constructor(readonly game: Game, public x: number, public y: number) {
     document.getElementById('score')!.textContent = Math.floor(this.contemplation).toString();
   }
 
   tick(dt: number) {
+    this.timeSinceLastBubble += dt;
     if(this.air > 0) {
       this.handleInput(dt);
 
       if(this.isContemplating) this.contemplation += dt * this.game.getContemplationRate(this.y);
     }
-
-    this.buoyancy = Math.max(-1, Math.min(1, this.buoyancy));
 
     this.x += this.velocity.x * dt;
     this.y += this.velocity.y * dt;
@@ -70,8 +71,12 @@ export class Submarine {
     this.velocity.x -= this.velocity.x * this.drag * dt;
     this.velocity.y -= this.velocity.y * this.drag * dt;
     if(this.y > this.height / 2 || this.air < 0) {
-      this.air -= dt * 1000;
-      this.air -= dt * 1000 * this.leakAtMaxDamage * this.damage / 100;
+      const airLossRate = 1 + (this.leakAtMaxDamage * this.damage / 100);
+      if(this.timeSinceLastBubble > 1 / airLossRate) {
+        addBubble(this.x, this.y);
+        this.timeSinceLastBubble = 0;
+      }
+      this.air -= dt * airLossRate
     }
 
     this.doCollision(dt);
@@ -222,8 +227,18 @@ export class Submarine {
 
     if(!this.isContemplating) {
       this.velocity.x += this.horizontalAcceleration * INPUT.right * dt;
+      const oldBuoyancy = this.buoyancy;
       this.buoyancy += this.ballastFillRate * INPUT.up * dt;
-      if(INPUT.up > 0) this.air -= dt * 1000 * this.ballastAirUsageRate;
+      this.buoyancy = Math.max(-1, Math.min(1, this.buoyancy));
+      if(INPUT.up > 0 && oldBuoyancy < this.buoyancy) {
+        pumpGain.gain.value = Math.max(0, 1 - this.buoyancy) * INPUT.up;
+        pumpOsc.frequency.value = INPUT.up * 50 + 50;
+        this.air -= dt * 1000 * this.ballastAirUsageRate;
+      } else {
+        pumpGain.gain.value = 0;
+      }
+
+      if(oldBuoyancy > this.buoyancy && Math.random() < -INPUT.up * 0.9) addBubble(this.x, this.y);
 
       airEscapeGain.gain.value = 0.2 * Math.max((this.buoyancy + 1) / 2, 0) * Math.max(0, -INPUT.up);
 

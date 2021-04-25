@@ -1,6 +1,7 @@
 declare var SimplexNoise: typeof import('./node_modules/simplex-noise/simplex-noise.js');
 
 import {Submarine} from './submarine.js';
+import {drawBubbles, tickBubbles} from './bubbles.js';
 import {PX_PER_FATHOM} from './math.js';
 import {setGameState} from './main.js';
 
@@ -29,6 +30,7 @@ export class Game {
   tick(dt: number) {
     this.getCaveGeometry(this.cave, this.offset.x, this.offset.x + this.width);
     this.submarine.tick(dt);
+    tickBubbles(dt);
     this.adjustCamera();
     if(this.submarine.air < -3000) setGameState('game-over');
   }
@@ -38,6 +40,7 @@ export class Game {
     this.ctx.fillRect(0, 0, this.width, this.height);
     this.ctx.translate(-this.offset.x, -this.offset.y);
     this.drawBackground();
+    drawBubbles(this.ctx);
     this.submarine.draw(this.ctx);
     this.drawCaveWalls();
     this.submarine.drawHud(this.ctx);
