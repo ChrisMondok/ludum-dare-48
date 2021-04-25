@@ -21,3 +21,36 @@ audioContext.audioWorklet.addModule('dist/noise-processor.js').then(_x => {
   noise.connect(airEscapeGain);
   noise.connect(ambienceGain);
 });
+
+export type SoundName = 'thunk1' | 'thunk2' | 'thunk3' | 'crash1';
+
+export function playSound(sound: SoundName) {
+  const source = audioContext.createBufferSource()
+  source.buffer = soundMap.get(sound)!;
+  source.connect(masterGain);
+  source.start(audioContext.currentTime);
+}
+
+let soundMap: Map<string, AudioBuffer>;
+
+export async function doneLoadingSounds() {
+  soundMap = await loadAllSounds();
+  return;
+}
+
+async function loadAllSounds() {
+  const names: SoundName[] = ['thunk1', 'thunk2', 'thunk3', 'crash1'];
+
+  const entries = names.map(async n => {
+    const buffer = await loadSound(n)
+    return [n, buffer] as const;
+  });
+
+  return new Map(await Promise.all(entries));
+}
+
+async function loadSound(name: SoundName) {
+  const data = await fetch(`sounds/${name}.wav`);
+  const arrayBuffer = await data.arrayBuffer();
+  return await audioContext.decodeAudioData(arrayBuffer);
+}

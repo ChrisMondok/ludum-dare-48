@@ -2,7 +2,7 @@ declare var SimplexNoise: typeof import('./node_modules/simplex-noise/simplex-no
 
 import {Game} from './game.js';
 import {Input} from './input.js';
-import {audioContext, masterGain} from './audio.js';
+import {audioContext, masterGain, doneLoadingSounds} from './audio.js';
 import {doneLoadingImages} from './images.js';
 
 let game: Game|undefined;
@@ -92,7 +92,7 @@ addEventListener('load', () => {
 
   setGameState('main-menu');
 
-  doneLoadingImages().then(() => {
+  Promise.all([doneLoadingImages(), doneLoadingSounds()]).then(() => {
     const startButton = (document.getElementById('start-button') as HTMLButtonElement);
     startButton.disabled = false;
     startButton.focus();

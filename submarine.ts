@@ -2,7 +2,7 @@ import type {Game, CaveGeometry} from './game';
 import {Vector, PX_PER_FATHOM} from './math.js';
 import {INPUT} from './input.js';
 import {Image} from './images.js';
-import {airEscapeGain, ambienceBiquad, ambienceGain} from './audio.js';
+import {airEscapeGain, ambienceBiquad, ambienceGain, playSound} from './audio.js';
 
 export class Submarine {
   air = 60 * 8 * 1000;
@@ -36,6 +36,9 @@ export class Submarine {
 
   private xscale = 1;
 
+  private damage = 0;
+  private readonly leakAtMaxDamage = 2;
+
   private readonly caveGeometry: CaveGeometry = {
     ceiling: [],
     floor: [],
@@ -43,6 +46,7 @@ export class Submarine {
   };
 
   private showQuitWarning = 0;
+  private crashSoundCooldown = 0;
   
   constructor(readonly game: Game, public x: number, public y: number) {
     document.getElementById('score')!.textContent = Math.floor(this.contemplation).toString();
@@ -67,6 +71,7 @@ export class Submarine {
     this.velocity.y -= this.velocity.y * this.drag * dt;
     if(this.y > this.height / 2 || this.air < 0) {
       this.air -= dt * 1000;
+      this.air -= dt * 1000 * this.leakAtMaxDamage * this.damage / 100;
     }
 
     this.doCollision(dt);
@@ -78,6 +83,7 @@ export class Submarine {
     ambienceGain.gain.value = 0.5 * Math.min(1, Math.sqrt(Vector.distanceSquared(this.velocity)) / 1000);
 
     this.showQuitWarning = Math.max(0, this.showQuitWarning - dt);
+    this.crashSoundCooldown = Math.max(0, this.crashSoundCooldown - dt);
   }
 
   draw(ctx: CanvasRenderingContext2D) {
@@ -197,6 +203,17 @@ export class Submarine {
     this.y += this.penetration.y * dt;
     this.velocity.x += this.penetration.x * dt;
     this.velocity.y += this.penetration.y * dt;
+
+    const crashAmount = Vector.distanceSquared(this.penetration)
+    if(crashAmount > 2000) {
+      this.damage += crashAmount / 10000;
+      console.log(this.damage);
+      if(this.crashSoundCooldown === 0) {
+        this.crashSoundCooldown = 0.1 + Math.random() * 0.3;
+        const soundToPlay = (['thunk1', 'thunk2', 'thunk3', 'crash1'] as const)[Math.floor(Math.random() * 4)];
+        playSound(soundToPlay);
+      }
+    }
   }
 
   private handleInput(dt: number) {
