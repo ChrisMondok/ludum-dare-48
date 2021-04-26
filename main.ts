@@ -82,14 +82,14 @@ addEventListener('load', () => {
       game = undefined;
     }
 
-    currentMenu = document.querySelector<HTMLDivElement>(`#${state}`);
-    currentMenu?.querySelector('button')?.focus();
-
     masterGain.gain.value = state === 'playing' ? 1 : 0;
 
 
     if(currentState) document.body.classList.remove(currentState);
     document.body.classList.add(state);
+
+    currentMenu = document.querySelector<HTMLDivElement>(`#${state}`);
+    currentMenu?.querySelector('button')?.focus();
 
     if(state === 'game-over') {
       moveGallery(document.querySelector('#game-over .gallery-container')!);
